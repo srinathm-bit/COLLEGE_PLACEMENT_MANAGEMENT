@@ -1,4 +1,5 @@
 from fastapi import FastAPI,Request
+import logging
 
 from app.api.auth_student import router as auth_student_router
 from app.core.admin_seed import seed_admin_user
@@ -13,9 +14,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from fastapi import Request
-
-
 
 app = FastAPI(
     title="College Placement Management System (CPMS)",
@@ -37,6 +35,8 @@ app.include_router(admin_student_router)
 app.include_router(auth_company_router)
 app.include_router(company_router)
 app.include_router(admin_company_router)
+
+logger = logging.getLogger("uvicorn.error")
 
 @app.on_event("startup")
 def on_startup():
@@ -60,4 +60,5 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def internal_server_error_handler(request: Request, exc: Exception):
-    return JSONResponse(status_code=500, content={"detail": "Internal server error"})        
+    logger.error(f"Unhandled error: {exc}")
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})      
