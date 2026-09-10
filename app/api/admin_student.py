@@ -51,7 +51,13 @@ def list_all_students(
     db: Session = Depends(get_db),
     _admin=Depends(require_admin),
 ):
-    students = list_students(db, skip, limit, department_id, graduation_year)
+    if not any([department_id, graduation_year]):
+        raise HTTPException(
+            status_code=400,
+            detail="Please provide at least one filter:  department_id, or graduation_year",
+        )
+
+    students = list_students(db, skip, limit, roll_number, department_id, graduation_year)
     return [_to_profile_out(db, s) for s in students]
 
 

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPMS - Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="container wide">
+    <h1>Admin Dashboard</h1>
+    <div class="card-grid">
+      <a class="card" href="admin-students.html">
+        <h3>Student List</h3>
+        <p>View and manage all registered students</p>
+      </a>
+      <a class="card" href="admin-companies.html">
+        <h3>Company List</h3>
+        <p>View and manage all registered companies</p>
+      </a>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/nav.js"></script>
+  <script>
+    renderNav("admin", "Admin Dashboard");
+  </script>
+</body>
+</html>

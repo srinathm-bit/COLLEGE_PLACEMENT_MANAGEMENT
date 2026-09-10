@@ -8,11 +8,7 @@ from app.models.enums import UserRole
 
 
 class User(Base):
-    """
-    Shared users table across all roles (admin, placement_officer, student, company).
-    Role-specific data lives in separate profile tables (Student, Company, etc.)
-    linked back to this table 1:1 via user_id.
-    """
+  
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -29,3 +25,4 @@ class User(Base):
     )
 
     student_profile = relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    company_profile = relationship("Company", back_populates="user", uselist=False, cascade="all, delete-orphan")
