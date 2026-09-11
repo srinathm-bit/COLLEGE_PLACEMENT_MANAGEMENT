@@ -51,6 +51,7 @@ def create_student_with_user(db: Session, payload: StudentRegister) -> Student:
         active_backlogs=payload.active_backlogs,
         graduation_year=payload.graduation_year,
         phone=payload.phone,
+        skills=payload.skills,
     )
     db.add(student)
     db.commit()

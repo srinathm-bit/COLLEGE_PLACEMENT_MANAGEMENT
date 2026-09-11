@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.deps import require_role
+from app.crud.company import get_company_by_user_id
+from app.crud.job import create_job, job_to_out
 from app.crud.student import list_students
 from app.crud.user import get_user_by_id
 from app.db.session import get_db
 from app.models.enums import UserRole
 from app.models.student import Student
+from app.schemas.company import CompanyProfileOut
+from app.schemas.job import JobCreate, JobOut
 from app.schemas.student import StudentProfileOut
 
 router = APIRouter(prefix="/api/companies", tags=["Company Self-Service"])
@@ -27,9 +31,17 @@ def _to_profile_out(db: Session, student: Student) -> StudentProfileOut:
         cgpa=float(student.cgpa),
         active_backlogs=student.active_backlogs,
         phone=student.phone,
+        skills=student.skills,
         resume_filename=student.resume_filename,
         resume_uploaded_at=student.resume_uploaded_at,
     )
+
+
+def _get_current_company(db: Session, user):
+    company = get_company_by_user_id(db, user.id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company profile not found")
+    return company
 
 
 @router.get("/students", response_model=list[StudentProfileOut])
@@ -43,3 +55,32 @@ def company_view_students(
 ):
     students = list_students(db, skip, limit, department_id, graduation_year)
     return [_to_profile_out(db, s) for s in students]
+
+
+@router.get("/me", response_model=CompanyProfileOut)
+def company_view_self(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    return CompanyProfileOut(
+        id=company.id,
+        user_id=company.user_id,
+        email=current_user.email,
+        company_name=company.company_name,
+        industry=company.industry,
+        website=company.website,
+        contact_person=company.contact_person,
+        contact_phone=company.contact_phone,
+    )
+
+
+@router.post("/jobs", response_model=JobOut, status_code=201)
+def company_post_job(
+    payload: JobCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    job = create_job(db, company.id, payload)
+    return job_to_out(job)

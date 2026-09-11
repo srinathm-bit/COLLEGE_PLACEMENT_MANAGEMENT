@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from app.api.department import router as department_router
 
 app = FastAPI(
     title="College Placement Management System (CPMS)",
@@ -35,6 +36,7 @@ app.include_router(admin_student_router)
 app.include_router(auth_company_router)
 app.include_router(company_router)
 app.include_router(admin_company_router)
+app.include_router(department_router)
 
 logger = logging.getLogger("uvicorn.error")
 

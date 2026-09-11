@@ -4,14 +4,12 @@ from sqlalchemy import String, ForeignKey, Numeric, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
+from sqlalchemy import String, ForeignKey, Numeric, Integer, DateTime, Text
 
 
 class Student(Base):
-    """
-    Student profile — 1:1 with User (via user_id), N:1 with Department.
-    Eligibility is NOT stored here as a boolean; it's computed per job posting
-    against cgpa/backlogs at query time (a later module).
-    """
+    
+
     __tablename__ = "students"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
@@ -24,6 +22,7 @@ class Student(Base):
     active_backlogs: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     graduation_year: Mapped[int] = mapped_column(Integer, nullable=False)
     phone: Mapped[str] = mapped_column(String(20), nullable=True)
+    skills: Mapped[str] = mapped_column(Text, nullable=True)
 
     resume_filename: Mapped[str] = mapped_column(String(255), nullable=True)
     resume_path: Mapped[str] = mapped_column(String(500), nullable=True)
