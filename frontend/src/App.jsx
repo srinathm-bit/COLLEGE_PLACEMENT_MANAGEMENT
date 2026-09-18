@@ -4,6 +4,8 @@ import AdminDashboard from './pages/AdminDashboard.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import CompanyDashboard from './pages/CompanyDashboard.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'
+import AdminStudents from './pages/AdminStudents.jsx'
+import AdminCompanies from './pages/AdminCompanies.jsx'
 
 function App() {
   return (
@@ -36,7 +38,24 @@ function App() {
             <CompanyDashboard />
           </PrivateRoute>
         }
+      
       />
+      <Route
+        path="/admin/students"
+        element={
+          <PrivateRoute allowedRole="admin">
+            <AdminStudents />
+          </PrivateRoute>
+  }
+/>
+      <Route
+        path="/admin/companies"
+        element={
+          <PrivateRoute allowedRole="admin">
+            <AdminCompanies />
+          </PrivateRoute>
+        }
+/>
     </Routes>
   )
 }

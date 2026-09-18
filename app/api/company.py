@@ -12,6 +12,11 @@ from app.models.student import Student
 from app.schemas.company import CompanyProfileOut
 from app.schemas.job import JobCreate, JobOut
 from app.schemas.student import StudentProfileOut
+from app.crud.job import create_job, job_to_out, list_jobs_by_company
+from app.crud.department import get_all_departments
+from app.schemas.department import DepartmentOut
+
+
 
 router = APIRouter(prefix="/api/companies", tags=["Company Self-Service"])
 
@@ -84,3 +89,19 @@ def company_post_job(
     company = _get_current_company(db, current_user)
     job = create_job(db, company.id, payload)
     return job_to_out(job)
+
+@router.get("/jobs", response_model=list[JobOut])
+def company_list_own_jobs(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    jobs = list_jobs_by_company(db, company.id)
+    return [job_to_out(job) for job in jobs]
+
+@router.get("/departments", response_model=list[DepartmentOut])
+def company_list_departments(
+    db: Session = Depends(get_db),
+    _company=Depends(require_company),
+):
+    return get_all_departments(db)

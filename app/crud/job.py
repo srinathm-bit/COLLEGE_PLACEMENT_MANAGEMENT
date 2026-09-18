@@ -34,6 +34,8 @@ def job_to_out(job: Job) -> dict:
         "department_ids": [d.id for d in job.departments],
     }
 
+def list_jobs_by_company(db: Session, company_id: int) -> list[Job]:
+    return db.query(Job).filter(Job.company_id == company_id).all()
 
 def _parse_skills(skills_str: str | None) -> set[str]:
     if not skills_str:
