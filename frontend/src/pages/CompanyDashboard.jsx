@@ -23,6 +23,11 @@ function CompanyDashboard() {
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  const [expandedJobId, setExpandedJobId] = useState(null)
+  const [applicantsByJob, setApplicantsByJob] = useState({})
+  const [loadingApplicants, setLoadingApplicants] = useState(false)
+  const [updatingStatusId, setUpdatingStatusId] = useState(null)
+
   useEffect(() => {
     fetchProfile()
     fetchJobs()
@@ -82,6 +87,14 @@ function CompanyDashboard() {
     setSkillsList(skillsList.filter((s) => s !== skillToRemove))
   }
 
+  function closeForm() {
+    setShowForm(false)
+    setFormData({ title: '', description: '', min_cgpa: '', department_ids: [] })
+    setSkillsList([])
+    setSkillInput('')
+    setFormError('')
+  }
+
   async function handlePostJob(e) {
     e.preventDefault()
     setFormError('')
@@ -98,10 +111,7 @@ function CompanyDashboard() {
         min_cgpa: parseFloat(formData.min_cgpa) || 0,
         required_skills: skillsList.join(', '),
       })
-      setFormData({ title: '', description: '', min_cgpa: '', department_ids: [] })
-      setSkillsList([])
-      setSkillInput('')
-      setShowForm(false)
+      closeForm()
       fetchJobs()
     } catch (err) {
       setFormError(err.message)
@@ -121,6 +131,59 @@ function CompanyDashboard() {
     }
   }
 
+  async function toggleApplicants(jobId) {
+    if (expandedJobId === jobId) {
+      setExpandedJobId(null)
+      return
+    }
+
+    setExpandedJobId(jobId)
+
+    if (!applicantsByJob[jobId]) {
+      setLoadingApplicants(true)
+      try {
+        const res = await api.get(`/api/companies/jobs/${jobId}/applicants`)
+        setApplicantsByJob((prev) => ({ ...prev, [jobId]: res.data }))
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoadingApplicants(false)
+      }
+    }
+  }
+
+  async function handleStatusChange(applicationId, newStatus, jobId) {
+    setUpdatingStatusId(applicationId)
+    try {
+      await api.put(`/api/companies/applications/${applicationId}/status`, { status: newStatus })
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: prev[jobId].map((a) =>
+          a.application_id === applicationId ? { ...a, status: newStatus } : a
+        ),
+      }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUpdatingStatusId(null)
+    }
+  }
+
+  function statusBadgeClass(status) {
+    if (status === 'selected') return 'status-selected'
+    if (status === 'rejected') return 'status-rejected'
+    if (status === 'shortlisted') return 'status-shortlisted'
+    if (status === 'interview_scheduled') return 'status-interview'
+    return 'status-applied'
+  }
+
+  function departmentName(id) {
+    const dept = departments.find((d) => d.id === id)
+    return dept ? dept.code : id
+  }
+
+  const applicantCount = (jobId) => applicantsByJob[jobId]?.length
+
   return (
     <div>
       <Nav title="Company Dashboard" />
@@ -128,20 +191,19 @@ function CompanyDashboard() {
         {error && <p className="company-error">{error}</p>}
 
         <div className="company-grid">
+          {/* Profile summary */}
           <div className="profile-card">
-            <h3>My Company</h3>
+            <h3>Company Profile</h3>
             {loadingProfile ? (
               <p className="loading-text">Loading...</p>
             ) : profile ? (
               <div className="profile-details">
-                <div className="profile-row">
-                  <span className="profile-label">Name</span>
-                  <span>{profile.company_name}</span>
-                </div>
-                <div className="profile-row">
-                  <span className="profile-label">Industry</span>
-                  <span>{profile.industry || '—'}</span>
-                </div>
+                <div className="profile-avatar">{profile.company_name?.charAt(0)}</div>
+                <p className="profile-company-name">{profile.company_name}</p>
+                <p className="profile-industry">{profile.industry || 'Industry not set'}</p>
+
+                <div className="profile-divider" />
+
                 <div className="profile-row">
                   <span className="profile-label">Email</span>
                   <span>{profile.email}</span>
@@ -162,15 +224,122 @@ function CompanyDashboard() {
             ) : null}
           </div>
 
-          <div className="jobs-card">
-            <div className="jobs-card-header">
-              <h3>Posted Jobs</h3>
-              <button className="post-job-button" onClick={() => setShowForm(!showForm)}>
-                {showForm ? 'Cancel' : '+ Post Job'}
+          {/* Jobs */}
+          <div className="jobs-section">
+            <div className="jobs-section-header">
+              <div>
+                <h3>Posted Jobs</h3>
+                <p className="jobs-section-subtitle">{jobs.length} job{jobs.length !== 1 ? 's' : ''} posted</p>
+              </div>
+              <button className="post-job-button" onClick={() => setShowForm(true)}>
+                + Post Job
               </button>
             </div>
 
-            {showForm && (
+            {loadingJobs ? (
+              <p className="loading-text">Loading...</p>
+            ) : jobs.length === 0 ? (
+              <div className="jobs-empty">
+                <p>You haven't posted any jobs yet.</p>
+                <button className="post-job-button" onClick={() => setShowForm(true)}>
+                  + Post your first job
+                </button>
+              </div>
+            ) : (
+              <div className="jobs-list">
+                {jobs.map((job) => (
+                  <div key={job.id} className="job-card">
+                    <div className="job-card-top">
+                      <div>
+                        <h4>{job.title}</h4>
+                        <div className="job-tags">
+                          <span className="tag tag-cgpa">CGPA ≥ {job.min_cgpa}</span>
+                          {job.department_ids.map((id) => (
+                            <span key={id} className="tag tag-dept">{departmentName(id)}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <button className="delete-icon-button" onClick={() => handleDeleteJob(job.id)} title="Delete job">
+                        🗑
+                      </button>
+                    </div>
+
+                    {job.description && <p className="job-description">{job.description}</p>}
+                    {job.required_skills && (
+                      <p className="job-skills-line">{job.required_skills}</p>
+                    )}
+
+                    <button className="applicants-toggle" onClick={() => toggleApplicants(job.id)}>
+                      <span>{expandedJobId === job.id ? '▾' : '▸'} Applicants</span>
+                      {applicantCount(job.id) !== undefined && (
+                        <span className="applicant-count">{applicantCount(job.id)}</span>
+                      )}
+                    </button>
+
+                    {expandedJobId === job.id && (
+                      <div className="applicants-panel">
+                        {loadingApplicants && !applicantsByJob[job.id] ? (
+                          <p className="loading-text">Loading applicants...</p>
+                        ) : applicantsByJob[job.id]?.length === 0 ? (
+                          <p className="applicants-empty">No applicants yet.</p>
+                        ) : (
+                          <div className="applicants-list">
+                            {applicantsByJob[job.id]?.map((a) => (
+                              <div key={a.application_id} className="applicant-row">
+                                <div className="applicant-main">
+                                  <span className="applicant-name">{a.full_name}</span>
+                                  <span className="applicant-roll">{a.roll_number} · {departmentName(a.department_id)} · CGPA {a.cgpa}</span>
+                                </div>
+                                <div className="applicant-side">
+                                  <span className={`applicant-status-badge ${statusBadgeClass(a.status)}`}>
+                                    {a.status.replace('_', ' ')}
+                                  </span>
+                                  <div className="status-actions">
+                                    <button
+                                      className="status-action shortlist"
+                                      disabled={updatingStatusId === a.application_id}
+                                      onClick={() => handleStatusChange(a.application_id, 'shortlisted', job.id)}
+                                    >
+                                      Shortlist
+                                    </button>
+                                    <button
+                                      className="status-action select"
+                                      disabled={updatingStatusId === a.application_id}
+                                      onClick={() => handleStatusChange(a.application_id, 'selected', job.id)}
+                                    >
+                                      Select
+                                    </button>
+                                    <button
+                                      className="status-action reject"
+                                      disabled={updatingStatusId === a.application_id}
+                                      onClick={() => handleStatusChange(a.application_id, 'rejected', job.id)}
+                                    >
+                                      Reject
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Post Job Modal */}
+        {showForm && (
+          <div className="modal-overlay" onClick={closeForm}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Post a New Job</h3>
+                <button className="modal-close" onClick={closeForm}>×</button>
+              </div>
+
               <form className="post-job-form" onSubmit={handlePostJob}>
                 <div className="form-group">
                   <label>Job Title</label>
@@ -212,13 +381,7 @@ function CompanyDashboard() {
                       {skillsList.map((skill) => (
                         <span key={skill} className="skill-chip">
                           {skill}
-                          <button
-                            type="button"
-                            className="skill-chip-remove"
-                            onClick={() => removeSkill(skill)}
-                          >
-                            ×
-                          </button>
+                          <button type="button" className="skill-chip-remove" onClick={() => removeSkill(skill)}>×</button>
                         </span>
                       ))}
                       <input
@@ -226,7 +389,7 @@ function CompanyDashboard() {
                         value={skillInput}
                         onChange={(e) => setSkillInput(e.target.value)}
                         onKeyDown={handleSkillInputKeyDown}
-                        placeholder={skillsList.length === 0 ? 'Type a skill and press Enter' : ''}
+                        placeholder={skillsList.length === 0 ? 'Type a skill, press Enter' : ''}
                       />
                     </div>
                   </div>
@@ -250,45 +413,16 @@ function CompanyDashboard() {
 
                 {formError && <p className="company-error">{formError}</p>}
 
-                <button type="submit" className="submit-job-button" disabled={submitting}>
-                  {submitting ? 'Posting...' : 'Post Job'}
-                </button>
+                <div className="modal-actions">
+                  <button type="button" className="cancel-button" onClick={closeForm}>Cancel</button>
+                  <button type="submit" className="submit-job-button" disabled={submitting}>
+                    {submitting ? 'Posting...' : 'Post Job'}
+                  </button>
+                </div>
               </form>
-            )}
-
-            {loadingJobs ? (
-              <p className="loading-text">Loading...</p>
-            ) : jobs.length === 0 ? (
-              <p className="jobs-empty">You haven't posted any jobs yet.</p>
-            ) : (
-              <div className="jobs-list">
-                {jobs.map((job) => (
-                  <div key={job.id} className="job-item">
-                    <div className="job-item-header">
-                      <h4>{job.title}</h4>
-                      <span className="job-cgpa-badge">CGPA ≥ {job.min_cgpa}</span>
-                    </div>
-                    {job.description && <p className="job-description">{job.description}</p>}
-                    {job.required_skills && (
-                      <p className="job-skills"><strong>Skills:</strong> {job.required_skills}</p>
-                    )}
-                    <p className="job-departments">
-                      <strong>Departments:</strong>{' '}
-                      {job.department_ids
-                        .map((id) => departments.find((d) => d.id === id)?.code || id)
-                        .join(', ')}
-                    </p>
-                    <div className="job-item-footer">
-                      <button className="delete-job-button" onClick={() => handleDeleteJob(job.id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

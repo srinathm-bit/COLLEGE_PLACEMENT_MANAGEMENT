@@ -15,6 +15,11 @@ from app.schemas.student import StudentProfileOut
 from app.crud.job import create_job, job_to_out, list_jobs_by_company, get_job_by_id, delete_job
 from app.crud.department import get_all_departments
 from app.schemas.department import DepartmentOut
+from app.crud.job import create_job, job_to_out, list_jobs_by_company, get_job_by_id, delete_job
+from app.crud.application import get_applicants_for_job
+from app.schemas.application import ApplicantOut
+from app.crud.application import get_applicants_for_job, get_application_by_id, update_application_status
+from app.schemas.application import ApplicantOut, ApplicationOut, ApplicationStatusUpdate
 
 
 
@@ -119,3 +124,66 @@ def company_delete_job(
     if job.company_id != company.id:
         raise HTTPException(status_code=403, detail="You do not have permission to delete this job")
     delete_job(db, job)
+
+@router.get("/jobs/{job_id}/applicants", response_model=list[ApplicantOut])
+def company_view_applicants(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    job = get_job_by_id(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to view applicants for this job")
+
+    return get_applicants_for_job(db, job_id)
+
+@router.put("/applications/{application_id}/status", response_model=ApplicationOut)
+def company_update_application_status(
+    application_id: int,
+    payload: ApplicationStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+
+    application = get_application_by_id(db, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if application.job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to update this application")
+
+    if payload.status.value == "interview_scheduled":
+        raise HTTPException(
+            status_code=400,
+            detail="Interview scheduled status is set automatically and cannot be set manually",
+        )
+
+    return update_application_status(db, application, payload.status.value)
+
+@router.put("/applications/{application_id}/status", response_model=ApplicationOut)
+def company_update_application_status(
+    application_id: int,
+    payload: ApplicationStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+
+    application = get_application_by_id(db, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if application.job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to update this application")
+
+    if payload.status.value == "interview_scheduled":
+        raise HTTPException(
+            status_code=400,
+            detail="Interview scheduled status is set automatically and cannot be set manually",
+        )
+
+    return update_application_status(db, application, payload.status.value)

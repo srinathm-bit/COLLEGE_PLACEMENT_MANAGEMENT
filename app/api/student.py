@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
+from app.schemas.application import MyApplicationOut
 from app.core.deps import require_role
 from app.core.file_storage import save_resume_file
 from app.crud.student import get_student_by_user_id, set_resume, update_student_self
@@ -14,6 +14,9 @@ from app.models.user import User
 from app.crud.job import get_eligible_jobs, job_to_out
 from app.schemas.job import JobOut
 from app.schemas.student import ResumeOut, StudentProfileOut, StudentProfileUpdate
+from app.crud.job import get_eligible_jobs, job_to_out, get_job_by_id
+from app.crud.application import has_already_applied, create_application, get_my_applications
+from app.schemas.application import ApplicationOut
 
 router = APIRouter(prefix="/api/students", tags=["Student Self-Service"])
 
@@ -91,3 +94,27 @@ def get_my_eligible_jobs(db: Session = Depends(get_db), current_user: User = Dep
     student = _get_own_student_or_404(db, current_user)
     eligible_jobs = get_eligible_jobs(db, student)
     return [job_to_out(job) for job in eligible_jobs]
+
+@router.post("/me/jobs/{job_id}/apply", response_model=ApplicationOut, status_code=201)
+def apply_to_job(job_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_student)):
+    student = _get_own_student_or_404(db, current_user)
+
+    job = get_job_by_id(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    eligible_jobs = get_eligible_jobs(db, student)
+    eligible_job_ids = {j.id for j in eligible_jobs}
+    if job_id not in eligible_job_ids:
+        raise HTTPException(status_code=403, detail="You are not eligible for this job")
+
+    if has_already_applied(db, student.id, job_id):
+        raise HTTPException(status_code=400, detail="You have already applied to this job")
+
+    return create_application(db, student.id, job_id)
+
+
+@router.get("/me/applications", response_model=list[MyApplicationOut])
+def get_my_applications_route(db: Session = Depends(get_db), current_user: User = Depends(require_student)):
+    student = _get_own_student_or_404(db, current_user)
+    return get_my_applications(db, student.id)

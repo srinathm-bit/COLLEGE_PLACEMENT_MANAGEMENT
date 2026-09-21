@@ -19,9 +19,13 @@ function StudentDashboard() {
   const [editError, setEditError] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
 
+  const [myApplications, setMyApplications] = useState([])
+  const [applyingJobId, setApplyingJobId] = useState(null)
+
   useEffect(() => {
     fetchProfile()
     fetchEligibleJobs()
+    fetchMyApplications()
   }, [])
 
   function fetchProfile() {
@@ -38,6 +42,37 @@ function StudentDashboard() {
       .then((res) => setJobs(res.data))
       .catch((err) => setError(err.message))
       .finally(() => setLoadingJobs(false))
+  }
+
+  function fetchMyApplications() {
+    api.get('/api/students/me/applications')
+      .then((res) => setMyApplications(res.data))
+      .catch(() => setMyApplications([]))
+  }
+
+  async function handleApply(jobId) {
+    setApplyingJobId(jobId)
+    setError('')
+    try {
+      await api.post(`/api/students/me/jobs/${jobId}/apply`)
+      fetchMyApplications()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setApplyingJobId(null)
+    }
+  }
+
+  function hasApplied(jobId) {
+    return myApplications.some((app) => app.job_id === jobId)
+  }
+
+  function statusBadgeClass(status) {
+    if (status === 'selected') return 'status-selected'
+    if (status === 'rejected') return 'status-rejected'
+    if (status === 'shortlisted') return 'status-shortlisted'
+    if (status === 'interview_scheduled') return 'status-interview'
+    return 'status-applied'
   }
 
   function startEdit() {
@@ -230,7 +265,7 @@ function StudentDashboard() {
               <div className="jobs-list">
                 {jobs.map((job) => (
                   <div key={job.id} className="job-item">
-                   <div className="job-item-header">
+                    <div className="job-item-header">
                       <div>
                         <h4>{job.title}</h4>
                         <p className="job-company-name">{job.company_name}</p>
@@ -243,11 +278,45 @@ function StudentDashboard() {
                         <strong>Skills:</strong> {job.required_skills}
                       </p>
                     )}
+                    <div className="job-item-footer">
+                      {hasApplied(job.id) ? (
+                        <span className="applied-badge">✓ Applied</span>
+                      ) : (
+                        <button
+                          className="apply-button"
+                          onClick={() => handleApply(job.id)}
+                          disabled={applyingJobId === job.id}
+                        >
+                          {applyingJobId === job.id ? 'Applying...' : 'Apply'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
+        </div>
+
+        <div className="applications-card">
+          <h3>My Applications</h3>
+          {myApplications.length === 0 ? (
+            <p className="jobs-empty">You haven't applied to any jobs yet.</p>
+          ) : (
+            <div className="my-applications-list">
+              {myApplications.map((app) => (
+                <div key={app.application_id} className="my-application-item">
+                  <div>
+                    <p className="ma-job-title">{app.job_title}</p>
+                    <p className="ma-company-name">{app.company_name}</p>
+                  </div>
+                  <span className={`applicant-status-badge ${statusBadgeClass(app.status)}`}>
+                    {app.status.replace('_', ' ')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
