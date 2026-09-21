@@ -8,7 +8,7 @@ function AdminDashboard() {
       <Nav title="Admin Dashboard" />
       <div className="dashboard-content">
         <h2>Welcome, Admin</h2>
-        <p className="dashboard-subtitle">Manage students and companies from here.</p>
+        <p className="dashboard-subtitle">Manage students, companies, and departments from here.</p>
 
         <div className="dashboard-cards">
           <Link to="/admin/students" className="dashboard-card">
@@ -19,6 +19,10 @@ function AdminDashboard() {
           <Link to="/admin/companies" className="dashboard-card">
             <h3>Companies</h3>
             <p>View and manage registered companies</p>
+          </Link>
+          <Link to="/admin/departments" className="dashboard-card">
+            <h3>Departments</h3>
+            <p>Add and manage academic departments</p>
           </Link>
         </div>
       </div>

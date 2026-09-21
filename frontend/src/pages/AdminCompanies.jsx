@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './AdminCompanies.css'
@@ -62,10 +63,23 @@ function AdminCompanies() {
     }
   }
 
+  async function handleDelete(companyId) {
+    if (!window.confirm('Are you sure you want to delete this company?')) return
+
+    try {
+      await api.delete(`/api/admin/companies/${companyId}`)
+      setCompanies((prev) => prev.filter((c) => c.id !== companyId))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div>
       <Nav title="Admin Dashboard" />
       <div className="companies-page">
+        <Link to="/admin-dashboard" className="back-link">← Back to Dashboard</Link>
+
         <div className="companies-header">
           <div>
             <h2>Companies</h2>
@@ -183,6 +197,7 @@ function AdminCompanies() {
                   <th>Contact</th>
                   <th>Phone</th>
                   <th>Website</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -199,6 +214,11 @@ function AdminCompanies() {
                           Visit
                         </a>
                       ) : '—'}
+                    </td>
+                    <td>
+                      <button className="delete-button" onClick={() => handleDelete(c.id)}>
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

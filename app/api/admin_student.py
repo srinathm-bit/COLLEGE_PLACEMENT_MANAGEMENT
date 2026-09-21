@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.deps import require_role
-from app.crud.student import get_student_by_id, list_students, update_student_as_admin
+from app.crud.student import get_student_by_id, list_students, update_student_as_admin, delete_student
 from app.crud.user import get_user_by_id
 from app.db.session import get_db
 from app.models.enums import UserRole
@@ -89,3 +89,8 @@ def get_student_resume(student_id: int, db: Session = Depends(get_db), _admin=De
         filename=student.resume_filename,
         media_type="application/octet-stream",
     )
+
+@router.delete("/{student_id}", status_code=204)
+def delete_student_detail(student_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
+    student = _get_student_or_404(db, student_id)
+    delete_student(db, student)

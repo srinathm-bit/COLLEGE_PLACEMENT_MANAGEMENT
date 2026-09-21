@@ -16,9 +16,10 @@ function CompanyDashboard() {
     title: '',
     description: '',
     min_cgpa: '',
-    required_skills: '',
     department_ids: [],
   })
+  const [skillsList, setSkillsList] = useState([])
+  const [skillInput, setSkillInput] = useState('')
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -66,6 +67,21 @@ function CompanyDashboard() {
     })
   }
 
+  function handleSkillInputKeyDown(e) {
+    if (e.key === 'Enter' || e.key === 'Tab' || e.key === ',') {
+      e.preventDefault()
+      const trimmed = skillInput.trim()
+      if (trimmed && !skillsList.includes(trimmed)) {
+        setSkillsList([...skillsList, trimmed])
+      }
+      setSkillInput('')
+    }
+  }
+
+  function removeSkill(skillToRemove) {
+    setSkillsList(skillsList.filter((s) => s !== skillToRemove))
+  }
+
   async function handlePostJob(e) {
     e.preventDefault()
     setFormError('')
@@ -80,14 +96,28 @@ function CompanyDashboard() {
       await api.post('/api/companies/jobs', {
         ...formData,
         min_cgpa: parseFloat(formData.min_cgpa) || 0,
+        required_skills: skillsList.join(', '),
       })
-      setFormData({ title: '', description: '', min_cgpa: '', required_skills: '', department_ids: [] })
+      setFormData({ title: '', description: '', min_cgpa: '', department_ids: [] })
+      setSkillsList([])
+      setSkillInput('')
       setShowForm(false)
       fetchJobs()
     } catch (err) {
       setFormError(err.message)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleDeleteJob(jobId) {
+    if (!window.confirm('Are you sure you want to delete this job posting?')) return
+
+    try {
+      await api.delete(`/api/companies/jobs/${jobId}`)
+      setJobs((prev) => prev.filter((j) => j.id !== jobId))
+    } catch (err) {
+      setError(err.message)
     }
   }
 
@@ -178,12 +208,27 @@ function CompanyDashboard() {
                   </div>
                   <div className="form-group">
                     <label>Required Skills</label>
-                    <input
-                      name="required_skills"
-                      value={formData.required_skills}
-                      onChange={handleChange}
-                      placeholder="e.g. python, sql"
-                    />
+                    <div className="chips-input-box">
+                      {skillsList.map((skill) => (
+                        <span key={skill} className="skill-chip">
+                          {skill}
+                          <button
+                            type="button"
+                            className="skill-chip-remove"
+                            onClick={() => removeSkill(skill)}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                      <input
+                        className="chip-text-input"
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
+                        onKeyDown={handleSkillInputKeyDown}
+                        placeholder={skillsList.length === 0 ? 'Type a skill and press Enter' : ''}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -233,6 +278,11 @@ function CompanyDashboard() {
                         .map((id) => departments.find((d) => d.id === id)?.code || id)
                         .join(', ')}
                     </p>
+                    <div className="job-item-footer">
+                      <button className="delete-job-button" onClick={() => handleDeleteJob(job.id)}>
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

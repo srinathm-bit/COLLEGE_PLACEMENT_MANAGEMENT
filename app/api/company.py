@@ -12,7 +12,7 @@ from app.models.student import Student
 from app.schemas.company import CompanyProfileOut
 from app.schemas.job import JobCreate, JobOut
 from app.schemas.student import StudentProfileOut
-from app.crud.job import create_job, job_to_out, list_jobs_by_company
+from app.crud.job import create_job, job_to_out, list_jobs_by_company, get_job_by_id, delete_job
 from app.crud.department import get_all_departments
 from app.schemas.department import DepartmentOut
 
@@ -105,3 +105,17 @@ def company_list_departments(
     _company=Depends(require_company),
 ):
     return get_all_departments(db)
+
+@router.delete("/jobs/{job_id}", status_code=204)
+def company_delete_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    job = get_job_by_id(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this job")
+    delete_job(db, job)

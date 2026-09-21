@@ -15,6 +15,7 @@ class JobCreate(BaseModel):
 class JobOut(BaseModel):
     id: int
     company_id: int
+    company_name: str
     title: str
     description: str | None = None
     min_cgpa: float

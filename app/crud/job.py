@@ -26,6 +26,7 @@ def job_to_out(job: Job) -> dict:
     return {
         "id": job.id,
         "company_id": job.company_id,
+        "company_name": job.company.company_name,
         "title": job.title,
         "description": job.description,
         "min_cgpa": float(job.min_cgpa),
@@ -69,3 +70,10 @@ def get_eligible_jobs(db: Session, student) -> list[Job]:
         eligible.append(job)
 
     return eligible
+
+def delete_job(db: Session, job: Job) -> None:
+    db.delete(job)
+    db.commit()
+
+def get_job_by_id(db: Session, job_id: int) -> Job | None:
+    return db.query(Job).filter(Job.id == job_id).first()

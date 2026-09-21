@@ -1,29 +1,29 @@
-.students-page {
+.departments-page {
   padding: 32px;
-  max-width: 1100px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-.students-header {
+.departments-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.students-header h2 {
+.departments-header h2 {
   margin: 0;
   color: #1e3a5f;
   font-size: 22px;
 }
 
-.students-subtitle {
+.departments-subtitle {
   margin: 4px 0 0;
   color: #6b7280;
   font-size: 13px;
 }
 
-.add-student-button {
+.add-department-button {
   padding: 10px 20px;
   background: #1e3a5f;
   color: #fff;
@@ -36,16 +36,16 @@
   white-space: nowrap;
 }
 
-.add-student-button:hover {
+.add-department-button:hover {
   background: #16304d;
 }
 
-.add-student-form {
+.add-department-form {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 24px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-row {
@@ -67,8 +67,7 @@
   color: #374151;
 }
 
-.form-row input,
-.form-row select {
+.form-row input {
   padding: 9px 10px;
   border: 1px solid #d1d5db;
   border-radius: 7px;
@@ -77,13 +76,12 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-row input:focus,
-.form-row select:focus {
+.form-row input:focus {
   border-color: #1e3a5f;
   box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
 }
 
-.submit-student-button {
+.submit-department-button {
   padding: 10px 24px;
   background: #16a34a;
   color: #fff;
@@ -95,78 +93,16 @@
   transition: background 0.2s ease;
 }
 
-.submit-student-button:hover:not(:disabled) {
+.submit-department-button:hover:not(:disabled) {
   background: #15803d;
 }
 
-.submit-student-button:disabled {
+.submit-department-button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
 
-.filter-bar {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 18px 20px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 160px;
-}
-
-.filter-group label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.filter-group select,
-.filter-group input {
-  padding: 9px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 7px;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.filter-group select:focus,
-.filter-group input:focus {
-  border-color: #1e3a5f;
-  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
-}
-
-.filter-button {
-  padding: 10px 22px;
-  background: #1e3a5f;
-  color: #fff;
-  border: none;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.filter-button:hover:not(:disabled) {
-  background: #16304d;
-}
-
-.filter-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.students-error {
+.departments-error {
   padding: 10px 14px;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -176,7 +112,8 @@
   margin-bottom: 16px;
 }
 
-.students-empty {
+.departments-loading,
+.departments-empty {
   padding: 24px;
   text-align: center;
   color: #6b7280;
@@ -193,19 +130,20 @@
   overflow: hidden;
 }
 
-.students-table {
+.departments-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: fixed;
 }
 
-.students-table thead {
+.departments-table thead {
   background: #f3f4f6;
 }
 
-.students-table th {
+.departments-table th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 12px 20px;
   color: #374151;
   font-weight: 600;
   font-size: 12px;
@@ -214,47 +152,46 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.students-table td {
-  padding: 12px 16px;
+.departments-table th:nth-child(1) {
+  width: 55%;
+}
+
+.departments-table th:nth-child(2) {
+  width: 25%;
+}
+
+.departments-table th:nth-child(3) {
+  width: 20%;
+}
+
+.departments-table td {
+  padding: 12px 20px;
   border-bottom: 1px solid #f3f4f6;
   color: #1f2937;
+  text-align: left;
 }
 
-.students-table tbody tr {
-  transition: background 0.15s ease;
-}
-
-.students-table tbody tr:hover {
+.departments-table tbody tr:hover {
   background: #f9fafb;
 }
 
-.students-table tbody tr:last-child td {
+.departments-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.skills-cell {
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.dept-name-cell {
+  font-weight: 600;
+  color: #1e3a5f;
 }
 
-.backlog-badge {
+.dept-code-badge {
   display: inline-block;
-  padding: 2px 10px;
+  padding: 3px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
-}
-
-.backlog-badge.clear {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.backlog-badge.has-backlog {
-  background: #fef3c7;
-  color: #92400e;
 }
 
 .delete-button {
@@ -271,17 +208,4 @@
 
 .delete-button:hover {
   background: #fecaca;
-}
-
-.back-link {
-  display: inline-block;
-  margin-bottom: 16px;
-  color: #1e3a5f;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.back-link:hover {
-  text-decoration: underline;
 }

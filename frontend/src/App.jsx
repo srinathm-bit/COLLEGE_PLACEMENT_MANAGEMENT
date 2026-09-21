@@ -5,6 +5,7 @@ import StudentDashboard from './pages/StudentDashboard.jsx'
 import CompanyDashboard from './pages/CompanyDashboard.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'
 import AdminStudents from './pages/AdminStudents.jsx'
+import AdminDepartments from './pages/AdminDepartments.jsx'
 import AdminCompanies from './pages/AdminCompanies.jsx'
 
 function App() {
@@ -55,6 +56,15 @@ function App() {
             <AdminCompanies />
           </PrivateRoute>
         }
+/>
+      <Route
+        path="/admin/departments"
+        element={
+          <PrivateRoute allowedRole="admin">
+            <AdminDepartments />
+          </PrivateRoute>
+        }
+        
 />
     </Routes>
   )

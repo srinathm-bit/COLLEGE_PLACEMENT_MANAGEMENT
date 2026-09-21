@@ -82,3 +82,7 @@ def set_resume(db: Session, student: Student, filename: str, path: str) -> Stude
     db.commit()
     db.refresh(student)
     return student
+
+def delete_student(db: Session, student: Student) -> None:
+    db.delete(student)
+    db.commit()

@@ -49,3 +49,7 @@ def update_company(db: Session, company: Company, payload: CompanyProfileUpdate)
     db.commit()
     db.refresh(company)
     return company
+
+def delete_company(db: Session, company: Company) -> None:
+    db.delete(company)
+    db.commit()

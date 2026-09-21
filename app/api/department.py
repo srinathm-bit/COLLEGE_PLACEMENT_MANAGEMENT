@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.deps import require_role
-from app.crud.department import create_department, get_all_departments
+from app.crud.department import create_department, get_all_departments, get_department_by_id, delete_department
 from app.db.session import get_db
 from app.models.enums import UserRole
 from app.schemas.department import DepartmentCreate, DepartmentOut
@@ -32,3 +32,10 @@ def list_departments(
     _admin=Depends(require_admin),
 ):
     return get_all_departments(db)
+
+@router.delete("/{department_id}", status_code=204)
+def admin_delete_department(department_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
+    department = get_department_by_id(db, department_id)
+    if not department:
+        raise HTTPException(status_code=404, detail="Department not found")
+    delete_department(db, department)

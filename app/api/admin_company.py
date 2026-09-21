@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-
 from app.core.deps import require_role
-from app.crud.company import create_company_with_user, get_company_by_id, list_companies
+from app.crud.company import create_company_with_user, get_company_by_id, list_companies, delete_company
 from app.crud.user import get_user_by_email, get_user_by_id
 from app.db.session import get_db
 from app.models.company import Company
@@ -57,3 +56,10 @@ def admin_get_company(company_id: int, db: Session = Depends(get_db), _admin=Dep
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     return _to_profile_out(db, company)
+
+@router.delete("/{company_id}", status_code=204)
+def admin_delete_company(company_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
+    company = get_company_by_id(db, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    delete_company(db, company)
