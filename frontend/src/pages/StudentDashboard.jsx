@@ -22,10 +22,14 @@ function StudentDashboard() {
   const [myApplications, setMyApplications] = useState([])
   const [applyingJobId, setApplyingJobId] = useState(null)
 
+  const [myInterviews, setMyInterviews] = useState([])
+  const [loadingInterviews, setLoadingInterviews] = useState(true)
+
   useEffect(() => {
     fetchProfile()
     fetchEligibleJobs()
     fetchMyApplications()
+    fetchMyInterviews()
   }, [])
 
   function fetchProfile() {
@@ -48,6 +52,14 @@ function StudentDashboard() {
     api.get('/api/students/me/applications')
       .then((res) => setMyApplications(res.data))
       .catch(() => setMyApplications([]))
+  }
+
+  function fetchMyInterviews() {
+    setLoadingInterviews(true)
+    api.get('/api/students/me/interviews')
+      .then((res) => setMyInterviews(res.data))
+      .catch(() => setMyInterviews([]))
+      .finally(() => setLoadingInterviews(false))
   }
 
   async function handleApply(jobId) {
@@ -298,25 +310,62 @@ function StudentDashboard() {
           </div>
         </div>
 
-        <div className="applications-card">
-          <h3>My Applications</h3>
-          {myApplications.length === 0 ? (
-            <p className="jobs-empty">You haven't applied to any jobs yet.</p>
-          ) : (
-            <div className="my-applications-list">
-              {myApplications.map((app) => (
-                <div key={app.application_id} className="my-application-item">
-                  <div>
-                    <p className="ma-job-title">{app.job_title}</p>
-                    <p className="ma-company-name">{app.company_name}</p>
+        <div className="secondary-grid">
+          <div className="applications-card">
+            <h3>My Applications</h3>
+            {myApplications.length === 0 ? (
+              <p className="jobs-empty">You haven't applied to any jobs yet.</p>
+            ) : (
+              <div className="my-applications-list">
+                {myApplications.map((app) => (
+                  <div key={app.application_id} className="my-application-item">
+                    <div>
+                      <p className="ma-job-title">{app.job_title}</p>
+                      <p className="ma-company-name">{app.company_name}</p>
+                    </div>
+                    <span className={`applicant-status-badge ${statusBadgeClass(app.status)}`}>
+                      {app.status.replace('_', ' ')}
+                    </span>
                   </div>
-                  <span className={`applicant-status-badge ${statusBadgeClass(app.status)}`}>
-                    {app.status.replace('_', ' ')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="applications-card">
+            <h3>Upcoming Interviews</h3>
+            {loadingInterviews ? (
+              <p className="loading-text">Loading...</p>
+            ) : myInterviews.length === 0 ? (
+              <p className="jobs-empty">No interviews scheduled yet.</p>
+            ) : (
+              <div className="my-applications-list">
+                {myInterviews.map((iv) => (
+                  <div key={iv.id} className="interview-item">
+                    <div className="interview-item-header">
+                      <p className="ma-job-title">{iv.job_title}</p>
+                      <span className={`applicant-status-badge ${statusBadgeClass('interview_scheduled')}`}>
+                        {iv.mode}
+                      </span>
+                    </div>
+                    <p className="ma-company-name">{iv.company_name}</p>
+                    <p className="interview-when">
+                      🗓 {new Date(iv.scheduled_at).toLocaleString()}
+                    </p>
+                    {iv.location_or_link && (
+                      <p className="interview-where">{iv.location_or_link}</p>
+                    )}
+                    {iv.notes && <p className="interview-notes">{iv.notes}</p>}
+                    {iv.result !== 'pending' && (
+                      <span className={`applicant-status-badge ${iv.result === 'passed' ? 'status-selected' : 'status-rejected'}`}>
+                        {iv.result}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

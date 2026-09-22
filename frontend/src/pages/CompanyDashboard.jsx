@@ -28,6 +28,18 @@ function CompanyDashboard() {
   const [loadingApplicants, setLoadingApplicants] = useState(false)
   const [updatingStatusId, setUpdatingStatusId] = useState(null)
 
+  const [scheduleModalApp, setScheduleModalApp] = useState(null)
+  const [scheduleForm, setScheduleForm] = useState({
+    scheduled_at: '',
+    mode: 'online',
+    location_or_link: '',
+    notes: '',
+  })
+  const [scheduleError, setScheduleError] = useState('')
+  const [scheduling, setScheduling] = useState(false)
+  const [interviewsByApplication, setInterviewsByApplication] = useState({})
+  const [recordingResultId, setRecordingResultId] = useState(null)
+
   useEffect(() => {
     fetchProfile()
     fetchJobs()
@@ -177,6 +189,62 @@ function CompanyDashboard() {
     return 'status-applied'
   }
 
+  function openScheduleModal(applicationId) {
+    setScheduleModalApp(applicationId)
+    setScheduleForm({ scheduled_at: '', mode: 'online', location_or_link: '', notes: '' })
+    setScheduleError('')
+  }
+
+  function closeScheduleModal() {
+    setScheduleModalApp(null)
+  }
+
+  function handleScheduleFormChange(e) {
+    setScheduleForm({ ...scheduleForm, [e.target.name]: e.target.value })
+  }
+
+  async function handleScheduleSubmit(e, jobId) {
+    e.preventDefault()
+    setScheduleError('')
+    setScheduling(true)
+
+    try {
+      const res = await api.post(`/api/companies/applications/${scheduleModalApp}/interview`, scheduleForm)
+      setInterviewsByApplication((prev) => ({ ...prev, [scheduleModalApp]: res.data }))
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: prev[jobId].map((a) =>
+          a.application_id === scheduleModalApp ? { ...a, status: 'interview_scheduled' } : a
+        ),
+      }))
+      closeScheduleModal()
+    } catch (err) {
+      setScheduleError(err.message)
+    } finally {
+      setScheduling(false)
+    }
+  }
+
+  async function handleRecordResult(interviewId, result, applicationId, jobId) {
+    setRecordingResultId(interviewId)
+    try {
+      const res = await api.put(`/api/companies/interviews/${interviewId}`, { result })
+      setInterviewsByApplication((prev) => ({ ...prev, [applicationId]: res.data }))
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: prev[jobId].map((a) =>
+          a.application_id === applicationId
+            ? { ...a, status: result === 'passed' ? 'selected' : 'rejected' }
+            : a
+        ),
+      }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setRecordingResultId(null)
+    }
+  }
+
   function departmentName(id) {
     const dept = departments.find((d) => d.id === id)
     return dept ? dept.code : id
@@ -288,7 +356,9 @@ function CompanyDashboard() {
                               <div key={a.application_id} className="applicant-row">
                                 <div className="applicant-main">
                                   <span className="applicant-name">{a.full_name}</span>
-                                  <span className="applicant-roll">{a.roll_number} · {departmentName(a.department_id)} · CGPA {a.cgpa}</span>
+                                  <span className="applicant-roll">
+                                    {a.roll_number} · {departmentName(a.department_id)} · CGPA {a.cgpa}
+                                  </span>
                                 </div>
                                 <div className="applicant-side">
                                   <span className={`applicant-status-badge ${statusBadgeClass(a.status)}`}>
@@ -318,6 +388,65 @@ function CompanyDashboard() {
                                     </button>
                                   </div>
                                 </div>
+
+                                {a.status === 'shortlisted' && (
+                                  <button
+                                    className="schedule-interview-button"
+                                    onClick={() => openScheduleModal(a.application_id)}
+                                  >
+                                    📅 Schedule Interview
+                                  </button>
+                                )}
+
+                                {a.status === 'interview_scheduled' && interviewsByApplication[a.application_id] && (
+                                  <div className="interview-info">
+                                    <p className="interview-detail">
+                                      <strong>When:</strong>{' '}
+                                      {new Date(
+                                        interviewsByApplication[a.application_id].scheduled_at
+                                      ).toLocaleString()}
+                                    </p>
+                                    <p className="interview-detail">
+                                      <strong>Mode:</strong> {interviewsByApplication[a.application_id].mode}
+                                    </p>
+                                    {interviewsByApplication[a.application_id].location_or_link && (
+                                      <p className="interview-detail">
+                                        <strong>Link/Venue:</strong>{' '}
+                                        {interviewsByApplication[a.application_id].location_or_link}
+                                      </p>
+                                    )}
+                                    <div className="interview-result-actions">
+                                      <button
+                                        className="status-action select"
+                                        disabled={recordingResultId === interviewsByApplication[a.application_id].id}
+                                        onClick={() =>
+                                          handleRecordResult(
+                                            interviewsByApplication[a.application_id].id,
+                                            'passed',
+                                            a.application_id,
+                                            job.id
+                                          )
+                                        }
+                                      >
+                                        Mark Passed
+                                      </button>
+                                      <button
+                                        className="status-action reject"
+                                        disabled={recordingResultId === interviewsByApplication[a.application_id].id}
+                                        onClick={() =>
+                                          handleRecordResult(
+                                            interviewsByApplication[a.application_id].id,
+                                            'failed',
+                                            a.application_id,
+                                            job.id
+                                          )
+                                        }
+                                      >
+                                        Mark Failed
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -417,6 +546,81 @@ function CompanyDashboard() {
                   <button type="button" className="cancel-button" onClick={closeForm}>Cancel</button>
                   <button type="submit" className="submit-job-button" disabled={submitting}>
                     {submitting ? 'Posting...' : 'Post Job'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Schedule Interview Modal */}
+        {scheduleModalApp && (
+          <div className="modal-overlay" onClick={closeScheduleModal}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Schedule Interview</h3>
+                <button className="modal-close" onClick={closeScheduleModal}>×</button>
+              </div>
+
+              <form
+                className="post-job-form"
+                onSubmit={(e) => {
+                  const job = jobs.find((j) =>
+                    applicantsByJob[j.id]?.some((a) => a.application_id === scheduleModalApp)
+                  )
+                  handleScheduleSubmit(e, job?.id)
+                }}
+              >
+                <div className="form-group">
+                  <label>Date &amp; Time</label>
+                  <input
+                    type="datetime-local"
+                    name="scheduled_at"
+                    value={scheduleForm.scheduled_at}
+                    onChange={handleScheduleFormChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Mode</label>
+                  <select name="mode" value={scheduleForm.mode} onChange={handleScheduleFormChange}>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>{scheduleForm.mode === 'online' ? 'Meeting Link' : 'Venue'}</label>
+                  <input
+                    name="location_or_link"
+                    value={scheduleForm.location_or_link}
+                    onChange={handleScheduleFormChange}
+                    placeholder={
+                      scheduleForm.mode === 'online'
+                        ? 'https://meet.google.com/...'
+                        : 'e.g. Room 302, Admin Block'
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Notes (optional)</label>
+                  <textarea
+                    name="notes"
+                    value={scheduleForm.notes}
+                    onChange={handleScheduleFormChange}
+                    placeholder="Any instructions for the candidate"
+                    rows={2}
+                  />
+                </div>
+
+                {scheduleError && <p className="company-error">{scheduleError}</p>}
+
+                <div className="modal-actions">
+                  <button type="button" className="cancel-button" onClick={closeScheduleModal}>Cancel</button>
+                  <button type="submit" className="submit-job-button" disabled={scheduling}>
+                    {scheduling ? 'Scheduling...' : 'Schedule'}
                   </button>
                 </div>
               </form>

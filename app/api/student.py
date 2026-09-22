@@ -1,5 +1,6 @@
 from pathlib import Path
-
+from app.crud.interview import get_my_interviews
+from app.schemas.interview import MyInterviewOut
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -118,3 +119,8 @@ def apply_to_job(job_id: int, db: Session = Depends(get_db), current_user: User 
 def get_my_applications_route(db: Session = Depends(get_db), current_user: User = Depends(require_student)):
     student = _get_own_student_or_404(db, current_user)
     return get_my_applications(db, student.id)
+
+@router.get("/me/interviews", response_model=list[MyInterviewOut])
+def get_my_interviews_route(db: Session = Depends(get_db), current_user: User = Depends(require_student)):
+    student = _get_own_student_or_404(db, current_user)
+    return get_my_interviews(db, student.id)

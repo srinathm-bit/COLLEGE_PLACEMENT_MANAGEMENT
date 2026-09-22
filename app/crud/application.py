@@ -73,3 +73,28 @@ def get_applicants_for_job(db: Session, job_id: int) -> list[dict]:
             "phone": student.phone,
         })
     return result
+
+def get_all_applications(db: Session, status: str | None = None) -> list[dict]:
+    query = db.query(Application)
+    if status is not None:
+        query = query.filter(Application.status == status)
+
+    applications = query.all()
+
+    result = []
+    for app in applications:
+        interview = app.interview
+
+        result.append({
+            "application_id": app.id,
+            "status": app.status,
+            "applied_at": app.applied_at,
+            "student_name": app.student.full_name,
+            "roll_number": app.student.roll_number,
+            "job_title": app.job.title,
+            "company_name": app.job.company.company_name,
+            "interview_scheduled_at": interview.scheduled_at if interview else None,
+            "interview_mode": interview.mode if interview else None,
+            "interview_result": interview.result if interview else None,
+        })
+    return result

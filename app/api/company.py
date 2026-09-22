@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-
+from app.crud.interview import create_interview, get_interview_by_application_id, get_interview_by_id, update_interview
+from app.schemas.interview import InterviewOut, InterviewSchedule, InterviewUpdate
 from app.core.deps import require_role
 from app.crud.company import get_company_by_user_id
 from app.crud.job import create_job, job_to_out
@@ -187,3 +188,55 @@ def company_update_application_status(
         )
 
     return update_application_status(db, application, payload.status.value)
+
+@router.post("/applications/{application_id}/interview", response_model=InterviewOut, status_code=201)
+def company_schedule_interview(
+    application_id: int,
+    payload: InterviewSchedule,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+
+    application = get_application_by_id(db, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if application.job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to schedule this interview")
+
+    if application.status != "shortlisted":
+        raise HTTPException(status_code=400, detail="Only shortlisted applications can have an interview scheduled")
+
+    if get_interview_by_application_id(db, application_id):
+        raise HTTPException(status_code=400, detail="An interview has already been scheduled for this application")
+
+    interview = create_interview(db, application_id, payload)
+    update_application_status(db, application, "interview_scheduled")
+    return interview
+
+
+@router.put("/interviews/{interview_id}", response_model=InterviewOut)
+def company_update_interview(
+    interview_id: int,
+    payload: InterviewUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+
+    interview = get_interview_by_id(db, interview_id)
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+
+    if interview.application.job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to update this interview")
+
+    interview = update_interview(db, interview, payload)
+
+    if payload.result == "passed":
+        update_application_status(db, interview.application, "selected")
+    elif payload.result == "failed":
+        update_application_status(db, interview.application, "rejected")
+
+    return interview
