@@ -45,3 +45,15 @@ class ApplicantOut(BaseModel):
     cgpa: float
     skills: str | None = None
     phone: str | None = None
+
+class AdminApplicationOut(BaseModel):
+    application_id: int
+    status: str
+    applied_at: datetime
+    student_name: str
+    roll_number: str
+    job_title: str
+    company_name: str
+    interview_scheduled_at: datetime | None = None
+    interview_mode: str | None = None
+    interview_result: str | None = None

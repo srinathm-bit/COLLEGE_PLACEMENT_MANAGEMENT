@@ -16,6 +16,10 @@ function AdminDashboard() {
             <p>View, filter, and manage student records</p>
           </Link>
 
+          <Link to="/admin/applications" className="dashboard-card">
+            <h3>Placement Overview</h3>
+            <p>View all applications, statuses and interviews</p>
+          </Link>
           <Link to="/admin/companies" className="dashboard-card">
             <h3>Companies</h3>
             <p>View and manage registered companies</p>

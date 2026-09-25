@@ -1,6 +1,6 @@
 from fastapi import FastAPI,Request
 import logging
-
+from app.api.admin_application import router as admin_application_router
 from app.api.auth_student import router as auth_student_router
 from app.core.admin_seed import seed_admin_user
 from app.core.config import settings
@@ -37,6 +37,7 @@ app.include_router(auth_company_router)
 app.include_router(company_router)
 app.include_router(admin_company_router)
 app.include_router(department_router)
+app.include_router(admin_application_router)
 
 logger = logging.getLogger("uvicorn.error")
 

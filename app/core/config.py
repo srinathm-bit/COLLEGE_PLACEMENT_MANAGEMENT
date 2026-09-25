@@ -8,12 +8,12 @@ class Settings(BaseSettings):
     os.environ directly — keeps everything in one auditable place.
     """
 
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 3306
-    DB_USER: str = "cpms_user"
+    DB_HOST: str = "mysql-a4d8abb-cpms-1.c.aivencloud.com"
+    DB_PORT: int = 11354
+    DB_USER: str = "avnadmin"
     DB_PASSWORD: str = ""
-    DB_NAME: str = "cpms_db"
-
+    DB_NAME: str = "defaultdb"
+    ssl_ca: str = "ca.pem"
     SECRET_KEY: str = "insecure-dev-key-change-me"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import String, ForeignKey, DateTime, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from app.db.session import Base
 
@@ -24,4 +24,4 @@ class Interview(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    application = relationship("Application", backref="interview", uselist=False)
+    application = relationship("Application", backref=backref("interview", uselist=False))
