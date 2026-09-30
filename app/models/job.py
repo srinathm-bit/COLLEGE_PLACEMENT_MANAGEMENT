@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Text, Numeric, ForeignKey, DateTime, Table, Column, Integer
+from sqlalchemy import String, Text, Numeric, ForeignKey, DateTime, Table, Column, Integer,JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -23,7 +23,7 @@ class Job(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     min_cgpa: Mapped[float] = mapped_column(Numeric(4, 2), nullable=False, default=0)
-    required_skills: Mapped[str] = mapped_column(Text, nullable=True)
+    required_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

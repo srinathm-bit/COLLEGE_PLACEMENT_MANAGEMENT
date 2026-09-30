@@ -4,7 +4,7 @@ from sqlalchemy import String, ForeignKey, Numeric, Integer, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
-from sqlalchemy import String, ForeignKey, Numeric, Integer, DateTime, Text
+from sqlalchemy import String, ForeignKey, Numeric, Integer, DateTime, Text,JSON
 
 
 class Student(Base):
@@ -22,7 +22,7 @@ class Student(Base):
     active_backlogs: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     graduation_year: Mapped[int] = mapped_column(Integer, nullable=False)
     phone: Mapped[str] = mapped_column(String(20), nullable=True)
-    skills: Mapped[str] = mapped_column(Text, nullable=True)
+    skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     resume_filename: Mapped[str] = mapped_column(String(255), nullable=True)
     resume_path: Mapped[str] = mapped_column(String(500), nullable=True)
