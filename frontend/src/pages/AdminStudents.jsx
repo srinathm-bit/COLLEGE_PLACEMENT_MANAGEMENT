@@ -4,6 +4,7 @@ import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './AdminStudents.css'
 
+
 function AdminStudents() {
   const [departments, setDepartments] = useState([])
   const [departmentId, setDepartmentId] = useState('')

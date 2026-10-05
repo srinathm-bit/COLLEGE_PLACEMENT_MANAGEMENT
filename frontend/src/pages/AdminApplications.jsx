@@ -127,4 +127,4 @@ function AdminApplications() {
   )
 }
 
-export default AdminApplications
+export default AdminApplications 
