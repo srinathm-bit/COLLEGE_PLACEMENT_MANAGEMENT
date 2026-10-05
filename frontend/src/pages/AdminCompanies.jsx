@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './AdminCompanies.css'
@@ -11,13 +10,8 @@ function AdminCompanies() {
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    company_name: '',
-    industry: '',
-    website: '',
-    contact_person: '',
-    contact_phone: '',
+    email: '', password: '', company_name: '', industry: '',
+    website: '', contact_person: '', contact_phone: '',
   })
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -46,13 +40,8 @@ function AdminCompanies() {
     try {
       await api.post('/api/admin/companies', formData)
       setFormData({
-        email: '',
-        password: '',
-        company_name: '',
-        industry: '',
-        website: '',
-        contact_person: '',
-        contact_phone: '',
+        email: '', password: '', company_name: '', industry: '',
+        website: '', contact_person: '', contact_phone: '',
       })
       setShowForm(false)
       fetchCompanies()
@@ -65,7 +54,6 @@ function AdminCompanies() {
 
   async function handleDelete(companyId) {
     if (!window.confirm('Are you sure you want to delete this company?')) return
-
     try {
       await api.delete(`/api/admin/companies/${companyId}`)
       setCompanies((prev) => prev.filter((c) => c.id !== companyId))
@@ -75,150 +63,94 @@ function AdminCompanies() {
   }
 
   return (
-    <div>
-      <Nav title="Admin Dashboard" />
-      <div className="companies-page">
-        <Link to="/admin-dashboard" className="back-link">← Back to Dashboard</Link>
-
-        <div className="companies-header">
+    <div className="app-layout">
+      <Nav role="admin" title="Admin" />
+      <main className="main-content">
+        <div className="page-header-row">
           <div>
-            <h2>Companies</h2>
-            <p className="companies-subtitle">Registered companies on the platform.</p>
+            <h1>Companies</h1>
+            <p className="page-subtitle">Registered companies on the platform.</p>
           </div>
-          <button className="add-company-button" onClick={() => setShowForm(!showForm)}>
+          <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancel' : '+ Add Company'}
           </button>
         </div>
 
         {showForm && (
-          <form className="add-company-form" onSubmit={handleAddCompany}>
+          <form className="panel-form" onSubmit={handleAddCompany}>
             <div className="form-row">
               <div className="form-group">
                 <label>Company Name</label>
-                <input
-                  name="company_name"
-                  value={formData.company_name}
-                  onChange={handleChange}
-                  placeholder="e.g. Acme Corp"
-                  required
-                />
+                <input name="company_name" value={formData.company_name} onChange={handleChange} placeholder="e.g. Acme Corp" required />
               </div>
               <div className="form-group">
                 <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="hr@acmecorp.com"
-                  required
-                />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="hr@acmecorp.com" required />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Minimum 8 characters"
-                  required
-                />
+                <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Minimum 8 characters" required />
               </div>
               <div className="form-group">
                 <label>Industry</label>
-                <input
-                  name="industry"
-                  value={formData.industry}
-                  onChange={handleChange}
-                  placeholder="e.g. Information Technology"
-                />
+                <input name="industry" value={formData.industry} onChange={handleChange} placeholder="e.g. Information Technology" />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>Website</label>
-                <input
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  placeholder="https://acmecorp.com"
-                />
+                <input name="website" value={formData.website} onChange={handleChange} placeholder="https://acmecorp.com" />
               </div>
               <div className="form-group">
                 <label>Contact Person</label>
-                <input
-                  name="contact_person"
-                  value={formData.contact_person}
-                  onChange={handleChange}
-                  placeholder="e.g. Jane Smith"
-                />
+                <input name="contact_person" value={formData.contact_person} onChange={handleChange} placeholder="e.g. Jane Smith" />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>Contact Phone</label>
-                <input
-                  name="contact_phone"
-                  value={formData.contact_phone}
-                  onChange={handleChange}
-                  placeholder="e.g. +91 98765 43210"
-                />
+                <input name="contact_phone" value={formData.contact_phone} onChange={handleChange} placeholder="e.g. +91 98765 43210" />
               </div>
             </div>
-
-            {formError && <p className="companies-error">{formError}</p>}
-
-            <button type="submit" className="submit-company-button" disabled={submitting}>
+            {formError && <p className="error-message">{formError}</p>}
+            <button type="submit" className="btn-success" disabled={submitting}>
               {submitting ? 'Adding...' : 'Add Company'}
             </button>
           </form>
         )}
 
-        {error && <p className="companies-error">{error}</p>}
+        {error && <p className="error-message">{error}</p>}
 
         {loading ? (
-          <p className="companies-loading">Loading companies...</p>
+          <div className="empty-state">Loading companies...</div>
         ) : companies.length === 0 ? (
-          <p className="companies-empty">No companies registered yet.</p>
+          <div className="empty-state">No companies registered yet.</div>
         ) : (
           <div className="table-wrapper">
-            <table className="companies-table">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th>Company</th>
-                  <th>Industry</th>
-                  <th>Email</th>
-                  <th>Contact</th>
-                  <th>Phone</th>
-                  <th>Website</th>
-                  <th>Actions</th>
+                  <th>Company</th><th>Industry</th><th>Email</th>
+                  <th>Contact</th><th>Phone</th><th>Website</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {companies.map((c) => (
                   <tr key={c.id}>
-                    <td className="company-name-cell">{c.company_name}</td>
+                    <td className="cell-strong">{c.company_name}</td>
                     <td>{c.industry || '—'}</td>
                     <td>{c.email}</td>
                     <td>{c.contact_person || '—'}</td>
                     <td>{c.contact_phone || '—'}</td>
                     <td>
                       {c.website ? (
-                        <a href={c.website} target="_blank" rel="noreferrer" className="website-link">
-                          Visit
-                        </a>
+                        <a href={c.website} target="_blank" rel="noreferrer" className="link-accent">Visit</a>
                       ) : '—'}
                     </td>
                     <td>
-                      <button className="delete-button" onClick={() => handleDelete(c.id)}>
-                        Delete
-                      </button>
+                      <button className="btn-danger-sm" onClick={() => handleDelete(c.id)}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -226,7 +158,7 @@ function AdminCompanies() {
             </table>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

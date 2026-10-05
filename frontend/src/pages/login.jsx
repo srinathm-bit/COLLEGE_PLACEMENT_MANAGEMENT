@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios.js'
 import { useAuth } from '../context/Authcontext.jsx'
-import './login.css'
+import './Login.css'
 
 const LOGIN_ENDPOINTS = {
   student: '/api/auth/student/login',
@@ -50,19 +50,27 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1 className="login-title">JUJU'S COLLEGE OF ENGINEERING AND TECHNOLOGY</h1>
-        <p className="login-subtitle">College Placement Management System</p>
+        <div className="login-brand">
+          <div className="login-logo">C</div>
+          <span>CPMS</span>
+        </div>
+        <h1 className="login-title">Welcome back</h1>
+        <p className="login-subtitle">Sign in to continue to your dashboard</p>
+
+        <div className="role-tabs">
+          {['student', 'admin', 'company'].map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`role-tab ${role === r ? 'active' : ''}`}
+              onClick={() => setRole(r)}
+            >
+              {r.charAt(0).toUpperCase() + r.slice(1)}
+            </button>
+          ))}
+        </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="role">Login as</label>
-            <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
-              <option value="company">Company</option>
-            </select>
-          </div>
-
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -88,7 +96,7 @@ function Login() {
           {error && <p className="error-message">{error}</p>}
 
           <button type="submit" className="login-button" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>

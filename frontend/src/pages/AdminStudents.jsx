@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './AdminStudents.css'
-import { Link } from 'react-router-dom'
 
 function AdminStudents() {
   const [departments, setDepartments] = useState([])
@@ -16,16 +16,9 @@ function AdminStudents() {
 
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    full_name: '',
-    roll_number: '',
-    department_id: '',
-    graduation_year: '',
-    cgpa: '',
-    active_backlogs: '',
-    phone: '',
-    skills: '',
+    email: '', password: '', full_name: '', roll_number: '',
+    department_id: '', graduation_year: '', cgpa: '', active_backlogs: '',
+    phone: '', skills: '',
   })
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -64,7 +57,6 @@ function AdminStudents() {
 
   async function handleDelete(studentId) {
     if (!window.confirm('Are you sure you want to delete this student?')) return
-
     try {
       await api.delete(`/api/admin/students/${studentId}`)
       setStudents((prev) => prev.filter((s) => s.id !== studentId))
@@ -96,16 +88,9 @@ function AdminStudents() {
         active_backlogs: parseInt(formData.active_backlogs) || 0,
       })
       setFormData({
-        email: '',
-        password: '',
-        full_name: '',
-        roll_number: '',
-        department_id: '',
-        graduation_year: '',
-        cgpa: '',
-        active_backlogs: '',
-        phone: '',
-        skills: '',
+        email: '', password: '', full_name: '', roll_number: '',
+        department_id: '', graduation_year: '', cgpa: '', active_backlogs: '',
+        phone: '', skills: '',
       })
       setShowForm(false)
     } catch (err) {
@@ -120,71 +105,50 @@ function AdminStudents() {
     return dept ? dept.code : id
   }
 
+  function skillTags(skills) {
+    if (!skills) return <span className="muted-text">—</span>
+    const list = Array.isArray(skills) ? skills : skills.split(',').map((s) => s.trim())
+    return list.map((s, i) => (
+      <span key={i} className="tag">{s}</span>
+    ))
+  }
+
   return (
-    <div>
-      <Nav title="Admin Dashboard" />
-      <div className="students-page">
-        <div className="students-header">
+    <div className="app-layout">
+      <Nav role="admin" title="Admin" />
+      <main className="main-content">
+        <div className="page-header-row">
           <div>
-            <h2>Students</h2>
-            <p className="students-subtitle">Search students by department or graduation year.</p>
+            <h1>Students</h1>
+            <p className="page-subtitle">Search, add, and manage student records.</p>
           </div>
-          <Link to="/admin-dashboard" className="back-link">← Back to Dashboard</Link>
-          <button className="add-student-button" onClick={() => setShowForm(!showForm)}>
+          <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'Cancel' : '+ Add Student'}
           </button>
         </div>
 
         {showForm && (
-          <form className="add-student-form" onSubmit={handleAddStudent}>
+          <form className="panel-form" onSubmit={handleAddStudent}>
             <div className="form-row">
               <div className="form-group">
                 <label>Full Name</label>
-                <input
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  placeholder="e.g. Priya Sharma"
-                  required
-                />
+                <input name="full_name" value={formData.full_name} onChange={handleChange} placeholder="e.g. Priya Sharma" required />
               </div>
               <div className="form-group">
                 <label>Roll Number</label>
-                <input
-                  name="roll_number"
-                  value={formData.roll_number}
-                  onChange={handleChange}
-                  placeholder="e.g. 21CS045"
-                  required
-                />
+                <input name="roll_number" value={formData.roll_number} onChange={handleChange} placeholder="e.g. 21CS045" required />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="student@example.com"
-                  required
-                />
+                <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="student@example.com" required />
               </div>
               <div className="form-group">
                 <label>Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Minimum 8 characters"
-                  required
-                />
+                <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Minimum 8 characters" required />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>Department</label>
@@ -197,65 +161,31 @@ function AdminStudents() {
               </div>
               <div className="form-group">
                 <label>Graduation Year</label>
-                <input
-                  type="number"
-                  name="graduation_year"
-                  value={formData.graduation_year}
-                  onChange={handleChange}
-                  placeholder="e.g. 2026"
-                  required
-                />
+                <input type="number" name="graduation_year" value={formData.graduation_year} onChange={handleChange} placeholder="e.g. 2026" required />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>CGPA</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="cgpa"
-                  value={formData.cgpa}
-                  onChange={handleChange}
-                  placeholder="e.g. 8.5"
-                />
+                <input type="number" step="0.01" name="cgpa" value={formData.cgpa} onChange={handleChange} placeholder="e.g. 8.5" />
               </div>
               <div className="form-group">
                 <label>Active Backlogs</label>
-                <input
-                  type="number"
-                  name="active_backlogs"
-                  value={formData.active_backlogs}
-                  onChange={handleChange}
-                  placeholder="e.g. 0"
-                />
+                <input type="number" name="active_backlogs" value={formData.active_backlogs} onChange={handleChange} placeholder="e.g. 0" />
               </div>
             </div>
-
             <div className="form-row">
               <div className="form-group">
                 <label>Phone</label>
-                <input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="e.g. +91 98765 43210"
-                />
+                <input name="phone" value={formData.phone} onChange={handleChange} placeholder="e.g. +91 98765 43210" />
               </div>
               <div className="form-group">
                 <label>Skills</label>
-                <input
-                  name="skills"
-                  value={formData.skills}
-                  onChange={handleChange}
-                  placeholder="e.g. python, sql"
-                />
+                <input name="skills" value={formData.skills} onChange={handleChange} placeholder="e.g. python, sql" />
               </div>
             </div>
-
-            {formError && <p className="students-error">{formError}</p>}
-
-            <button type="submit" className="submit-student-button" disabled={submitting}>
+            {formError && <p className="error-message">{formError}</p>}
+            <button type="submit" className="btn-success" disabled={submitting}>
               {submitting ? 'Adding...' : 'Add Student'}
             </button>
           </form>
@@ -271,63 +201,47 @@ function AdminStudents() {
               ))}
             </select>
           </div>
-
           <div className="filter-group">
             <label>Graduation Year</label>
-            <input
-              type="number"
-              placeholder="e.g. 2026"
-              value={graduationYear}
-              onChange={(e) => setGraduationYear(e.target.value)}
-            />
+            <input type="number" placeholder="e.g. 2026" value={graduationYear} onChange={(e) => setGraduationYear(e.target.value)} />
           </div>
-
-          <button type="submit" className="filter-button" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Searching...' : 'Search'}
           </button>
         </form>
 
-        {error && <p className="students-error">{error}</p>}
+        {error && <p className="error-message">{error}</p>}
 
         {searched && !loading && !error && students.length === 0 && (
-          <p className="students-empty">No students found for the selected filters.</p>
+          <div className="empty-state">No students found for the selected filters.</div>
         )}
 
         {students.length > 0 && (
           <div className="table-wrapper">
-            <table className="students-table">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th>Roll No.</th>
-                  <th>Name</th>
-                  <th>Department</th>
-                  <th>Grad Year</th>
-                  <th>CGPA</th>
-                  <th>Backlogs</th>
-                  <th>Skills</th>
-                  <th>Phone</th>
-                  <th>Actions</th>
+                  <th>Roll No.</th><th>Name</th><th>Department</th><th>Grad Year</th>
+                  <th>CGPA</th><th>Backlogs</th><th>Skills</th><th>Phone</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map((s) => (
                   <tr key={s.id}>
                     <td>{s.roll_number}</td>
-                    <td>{s.full_name}</td>
+                    <td className="cell-strong">{s.full_name}</td>
                     <td>{departmentName(s.department_id)}</td>
                     <td>{s.graduation_year}</td>
                     <td>{s.cgpa}</td>
                     <td>
-                      <span className={`backlog-badge ${s.active_backlogs > 0 ? 'has-backlog' : 'clear'}`}>
+                      <span className={`badge ${s.active_backlogs > 0 ? 'badge-amber' : 'badge-green'}`}>
                         {s.active_backlogs}
                       </span>
                     </td>
-                    <td className="skills-cell">{s.skills || '—'}</td>
+                    <td className="tags-cell">{skillTags(s.skills)}</td>
                     <td>{s.phone || '—'}</td>
                     <td>
-                      <button className="delete-button" onClick={() => handleDelete(s.id)}>
-                        Delete
-                      </button>
+                      <button className="btn-danger-sm" onClick={() => handleDelete(s.id)}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -335,7 +249,7 @@ function AdminStudents() {
             </table>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

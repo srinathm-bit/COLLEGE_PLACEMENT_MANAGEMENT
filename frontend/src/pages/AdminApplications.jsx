@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './AdminApplications.css'
@@ -27,28 +26,40 @@ function AdminApplications() {
   }
 
   function statusBadgeClass(status) {
-    if (status === 'selected') return 'status-selected'
-    if (status === 'rejected') return 'status-rejected'
-    if (status === 'shortlisted') return 'status-shortlisted'
-    if (status === 'interview_scheduled') return 'status-interview'
-    return 'status-applied'
+    if (status === 'selected') return 'badge-green'
+    if (status === 'rejected') return 'badge-red'
+    if (status === 'shortlisted') return 'badge-amber'
+    if (status === 'interview_scheduled') return 'badge-teal'
+    return 'badge-blue'
   }
 
-  return (
-    <div>
-      <Nav title="Admin Dashboard" />
-      <div className="applications-page">
-        <Link to="/admin-dashboard" className="back-link">← Back to Dashboard</Link>
+  const counts = STATUS_OPTIONS.reduce((acc, s) => {
+    acc[s] = applications.filter((a) => a.status === s).length
+    return acc
+  }, {})
 
-        <div className="applications-header">
+  return (
+    <div className="app-layout">
+      <Nav role="admin" title="Admin" />
+      <main className="main-content">
+        <div className="page-header-row">
           <div>
-            <h2>Placement Overview</h2>
-            <p className="applications-subtitle">All applications across students and companies.</p>
+            <h1>Placement Overview</h1>
+            <p className="page-subtitle">All applications across students and companies.</p>
           </div>
         </div>
 
+        <div className="kpi-grid">
+          {STATUS_OPTIONS.map((s) => (
+            <div key={s} className="kpi-card">
+              <span className="kpi-value">{counts[s]}</span>
+              <span className="kpi-label">{s.replace('_', ' ')}</span>
+            </div>
+          ))}
+        </div>
+
         <div className="filter-bar">
-          <div className="filter-group">
+          <div className="form-group">
             <label>Status</label>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">All</option>
@@ -59,36 +70,32 @@ function AdminApplications() {
           </div>
         </div>
 
-        {error && <p className="applications-error">{error}</p>}
+        {error && <p className="error-message">{error}</p>}
 
         {loading ? (
-          <p className="applications-loading">Loading...</p>
+          <div className="empty-state">Loading...</div>
         ) : applications.length === 0 ? (
-          <p className="applications-empty">No applications found.</p>
+          <div className="empty-state">No applications found.</div>
         ) : (
           <div className="table-wrapper">
-            <table className="applications-table">
+            <table className="data-table">
               <thead>
                 <tr>
-                  <th>Student</th>
-                  <th>Job</th>
-                  <th>Company</th>
-                  <th>Status</th>
-                  <th>Applied</th>
-                  <th>Interview</th>
+                  <th>Student</th><th>Job</th><th>Company</th>
+                  <th>Status</th><th>Applied</th><th>Interview</th>
                 </tr>
               </thead>
               <tbody>
                 {applications.map((a) => (
                   <tr key={a.application_id}>
                     <td>
-                      <span className="student-name-cell">{a.student_name}</span>
-                      <span className="student-roll-cell">{a.roll_number}</span>
+                      <span className="cell-strong">{a.student_name}</span>
+                      <span className="cell-sub">{a.roll_number}</span>
                     </td>
                     <td>{a.job_title}</td>
                     <td>{a.company_name}</td>
                     <td>
-                      <span className={`status-badge ${statusBadgeClass(a.status)}`}>
+                      <span className={`badge ${statusBadgeClass(a.status)}`}>
                         {a.status.replace('_', ' ')}
                       </span>
                     </td>
@@ -96,17 +103,17 @@ function AdminApplications() {
                     <td>
                       {a.interview_scheduled_at ? (
                         <>
-                          <span className="interview-date-cell">
+                          <span className="cell-sub-block">
                             {new Date(a.interview_scheduled_at).toLocaleDateString()} ({a.interview_mode})
                           </span>
                           {a.interview_result && a.interview_result !== 'pending' && (
-                            <span className={`status-badge ${a.interview_result === 'passed' ? 'status-selected' : 'status-rejected'}`}>
+                            <span className={`badge ${a.interview_result === 'passed' ? 'badge-green' : 'badge-red'}`}>
                               {a.interview_result}
                             </span>
                           )}
                         </>
                       ) : (
-                        '—'
+                        <span className="muted-text">—</span>
                       )}
                     </td>
                   </tr>
@@ -115,7 +122,7 @@ function AdminApplications() {
             </table>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

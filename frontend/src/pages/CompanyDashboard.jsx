@@ -12,12 +12,7 @@ function CompanyDashboard() {
   const [error, setError] = useState('')
 
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    min_cgpa: '',
-    department_ids: [],
-  })
+  const [formData, setFormData] = useState({ title: '', description: '', min_cgpa: '', department_ids: [] })
   const [skillsList, setSkillsList] = useState([])
   const [skillInput, setSkillInput] = useState('')
   const [formError, setFormError] = useState('')
@@ -29,12 +24,7 @@ function CompanyDashboard() {
   const [updatingStatusId, setUpdatingStatusId] = useState(null)
 
   const [scheduleModalApp, setScheduleModalApp] = useState(null)
-  const [scheduleForm, setScheduleForm] = useState({
-    scheduled_at: '',
-    mode: 'online',
-    location_or_link: '',
-    notes: '',
-  })
+  const [scheduleForm, setScheduleForm] = useState({ scheduled_at: '', mode: 'online', location_or_link: '', notes: '' })
   const [scheduleError, setScheduleError] = useState('')
   const [scheduling, setScheduling] = useState(false)
   const [interviewsByApplication, setInterviewsByApplication] = useState({})
@@ -48,39 +38,24 @@ function CompanyDashboard() {
 
   function fetchProfile() {
     setLoadingProfile(true)
-    api.get('/api/companies/me')
-      .then((res) => setProfile(res.data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoadingProfile(false))
+    api.get('/api/companies/me').then((res) => setProfile(res.data)).catch((err) => setError(err.message)).finally(() => setLoadingProfile(false))
   }
 
   function fetchJobs() {
     setLoadingJobs(true)
-    api.get('/api/companies/jobs')
-      .then((res) => setJobs(res.data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoadingJobs(false))
+    api.get('/api/companies/jobs').then((res) => setJobs(res.data)).catch((err) => setError(err.message)).finally(() => setLoadingJobs(false))
   }
 
   function fetchDepartments() {
-    api.get('/api/companies/departments')
-      .then((res) => setDepartments(res.data))
-      .catch(() => setDepartments([]))
+    api.get('/api/companies/departments').then((res) => setDepartments(res.data)).catch(() => setDepartments([]))
   }
 
-  function handleChange(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+  function handleChange(e) { setFormData({ ...formData, [e.target.name]: e.target.value }) }
 
   function toggleDepartment(id) {
     setFormData((prev) => {
       const exists = prev.department_ids.includes(id)
-      return {
-        ...prev,
-        department_ids: exists
-          ? prev.department_ids.filter((d) => d !== id)
-          : [...prev.department_ids, id],
-      }
+      return { ...prev, department_ids: exists ? prev.department_ids.filter((d) => d !== id) : [...prev.department_ids, id] }
     })
   }
 
@@ -88,16 +63,12 @@ function CompanyDashboard() {
     if (e.key === 'Enter' || e.key === 'Tab' || e.key === ',') {
       e.preventDefault()
       const trimmed = skillInput.trim()
-      if (trimmed && !skillsList.includes(trimmed)) {
-        setSkillsList([...skillsList, trimmed])
-      }
+      if (trimmed && !skillsList.includes(trimmed)) setSkillsList([...skillsList, trimmed])
       setSkillInput('')
     }
   }
 
-  function removeSkill(skillToRemove) {
-    setSkillsList(skillsList.filter((s) => s !== skillToRemove))
-  }
+  function removeSkill(skillToRemove) { setSkillsList(skillsList.filter((s) => s !== skillToRemove)) }
 
   function closeForm() {
     setShowForm(false)
@@ -110,19 +81,13 @@ function CompanyDashboard() {
   async function handlePostJob(e) {
     e.preventDefault()
     setFormError('')
-
     if (formData.department_ids.length === 0) {
       setFormError('Please select at least one eligible department.')
       return
     }
-
     setSubmitting(true)
     try {
-      await api.post('/api/companies/jobs', {
-        ...formData,
-        min_cgpa: parseFloat(formData.min_cgpa) || 0,
-        required_skills: skillsList.join(', '),
-      })
+      await api.post('/api/companies/jobs', { ...formData, min_cgpa: parseFloat(formData.min_cgpa) || 0, required_skills: skillsList.join(', ') })
       closeForm()
       fetchJobs()
     } catch (err) {
@@ -134,7 +99,6 @@ function CompanyDashboard() {
 
   async function handleDeleteJob(jobId) {
     if (!window.confirm('Are you sure you want to delete this job posting?')) return
-
     try {
       await api.delete(`/api/companies/jobs/${jobId}`)
       setJobs((prev) => prev.filter((j) => j.id !== jobId))
@@ -144,13 +108,8 @@ function CompanyDashboard() {
   }
 
   async function toggleApplicants(jobId) {
-    if (expandedJobId === jobId) {
-      setExpandedJobId(null)
-      return
-    }
-
+    if (expandedJobId === jobId) { setExpandedJobId(null); return }
     setExpandedJobId(jobId)
-
     if (!applicantsByJob[jobId]) {
       setLoadingApplicants(true)
       try {
@@ -170,9 +129,7 @@ function CompanyDashboard() {
       await api.put(`/api/companies/applications/${applicationId}/status`, { status: newStatus })
       setApplicantsByJob((prev) => ({
         ...prev,
-        [jobId]: prev[jobId].map((a) =>
-          a.application_id === applicationId ? { ...a, status: newStatus } : a
-        ),
+        [jobId]: prev[jobId].map((a) => (a.application_id === applicationId ? { ...a, status: newStatus } : a)),
       }))
     } catch (err) {
       setError(err.message)
@@ -182,11 +139,11 @@ function CompanyDashboard() {
   }
 
   function statusBadgeClass(status) {
-    if (status === 'selected') return 'status-selected'
-    if (status === 'rejected') return 'status-rejected'
-    if (status === 'shortlisted') return 'status-shortlisted'
-    if (status === 'interview_scheduled') return 'status-interview'
-    return 'status-applied'
+    if (status === 'selected') return 'badge-green'
+    if (status === 'rejected') return 'badge-red'
+    if (status === 'shortlisted') return 'badge-amber'
+    if (status === 'interview_scheduled') return 'badge-teal'
+    return 'badge-blue'
   }
 
   function openScheduleModal(applicationId) {
@@ -195,27 +152,19 @@ function CompanyDashboard() {
     setScheduleError('')
   }
 
-  function closeScheduleModal() {
-    setScheduleModalApp(null)
-  }
-
-  function handleScheduleFormChange(e) {
-    setScheduleForm({ ...scheduleForm, [e.target.name]: e.target.value })
-  }
+  function closeScheduleModal() { setScheduleModalApp(null) }
+  function handleScheduleFormChange(e) { setScheduleForm({ ...scheduleForm, [e.target.name]: e.target.value }) }
 
   async function handleScheduleSubmit(e, jobId) {
     e.preventDefault()
     setScheduleError('')
     setScheduling(true)
-
     try {
       const res = await api.post(`/api/companies/applications/${scheduleModalApp}/interview`, scheduleForm)
       setInterviewsByApplication((prev) => ({ ...prev, [scheduleModalApp]: res.data }))
       setApplicantsByJob((prev) => ({
         ...prev,
-        [jobId]: prev[jobId].map((a) =>
-          a.application_id === scheduleModalApp ? { ...a, status: 'interview_scheduled' } : a
-        ),
+        [jobId]: prev[jobId].map((a) => (a.application_id === scheduleModalApp ? { ...a, status: 'interview_scheduled' } : a)),
       }))
       closeScheduleModal()
     } catch (err) {
@@ -232,11 +181,7 @@ function CompanyDashboard() {
       setInterviewsByApplication((prev) => ({ ...prev, [applicationId]: res.data }))
       setApplicantsByJob((prev) => ({
         ...prev,
-        [jobId]: prev[jobId].map((a) =>
-          a.application_id === applicationId
-            ? { ...a, status: result === 'passed' ? 'selected' : 'rejected' }
-            : a
-        ),
+        [jobId]: prev[jobId].map((a) => (a.application_id === applicationId ? { ...a, status: result === 'passed' ? 'selected' : 'rejected' } : a)),
       }))
     } catch (err) {
       setError(err.message)
@@ -253,147 +198,123 @@ function CompanyDashboard() {
   const applicantCount = (jobId) => applicantsByJob[jobId]?.length
 
   return (
-    <div>
-      <Nav title="Company Dashboard" />
-      <div className="company-page">
-        {error && <p className="company-error">{error}</p>}
+    <div className="app-layout">
+      <Nav role="company" title="Company" />
+      <main className="main-content">
+        <div className="page-header-row">
+          <div>
+            <h1>{profile?.company_name || 'Dashboard'}</h1>
+            <p className="page-subtitle">{jobs.length} job{jobs.length !== 1 ? 's' : ''} posted</p>
+          </div>
+          <button className="btn-primary" onClick={() => setShowForm(true)}>+ Post Job</button>
+        </div>
 
-        <div className="company-grid">
-          {/* Profile summary */}
-          <div className="profile-card">
-            <h3>Company Profile</h3>
-            {loadingProfile ? (
-              <p className="loading-text">Loading...</p>
-            ) : profile ? (
-              <div className="profile-details">
-                <div className="profile-avatar">{profile.company_name?.charAt(0)}</div>
-                <p className="profile-company-name">{profile.company_name}</p>
-                <p className="profile-industry">{profile.industry || 'Industry not set'}</p>
+        {error && <p className="error-message">{error}</p>}
 
-                <div className="profile-divider" />
-
-                <div className="profile-row">
-                  <span className="profile-label">Email</span>
-                  <span>{profile.email}</span>
+        <div className="dashboard-grid">
+          <div className="side-panel">
+            <div className="panel-card">
+              <h3>Company Profile</h3>
+              {loadingProfile ? (
+                <p className="muted-text">Loading...</p>
+              ) : profile ? (
+                <div className="profile-list">
+                  <div className="profile-avatar">{profile.company_name?.charAt(0)}</div>
+                  <p className="profile-name-centered">{profile.company_name}</p>
+                  <p className="profile-sub-centered">{profile.industry || 'Industry not set'}</p>
+                  <div className="divider" />
+                  <div className="profile-row"><span className="profile-label">Email</span><span>{profile.email}</span></div>
+                  <div className="profile-row"><span className="profile-label">Contact</span><span>{profile.contact_person || '—'}</span></div>
+                  <div className="profile-row"><span className="profile-label">Phone</span><span>{profile.contact_phone || '—'}</span></div>
+                  <div className="profile-row"><span className="profile-label">Website</span><span>{profile.website || '—'}</span></div>
                 </div>
-                <div className="profile-row">
-                  <span className="profile-label">Contact</span>
-                  <span>{profile.contact_person || '—'}</span>
-                </div>
-                <div className="profile-row">
-                  <span className="profile-label">Phone</span>
-                  <span>{profile.contact_phone || '—'}</span>
-                </div>
-                <div className="profile-row">
-                  <span className="profile-label">Website</span>
-                  <span>{profile.website || '—'}</span>
-                </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
-          {/* Jobs */}
-          <div className="jobs-section">
-            <div className="jobs-section-header">
-              <div>
-                <h3>Posted Jobs</h3>
-                <p className="jobs-section-subtitle">{jobs.length} job{jobs.length !== 1 ? 's' : ''} posted</p>
-              </div>
-              <button className="post-job-button" onClick={() => setShowForm(true)}>
-                + Post Job
-              </button>
-            </div>
-
+          <div className="main-panel">
             {loadingJobs ? (
-              <p className="loading-text">Loading...</p>
+              <p className="muted-text">Loading...</p>
             ) : jobs.length === 0 ? (
-              <div className="jobs-empty">
-                <p>You haven't posted any jobs yet.</p>
-                <button className="post-job-button" onClick={() => setShowForm(true)}>
-                  + Post your first job
-                </button>
+              <div className="panel-card">
+                <div className="empty-state">
+                  <p>You haven't posted any jobs yet.</p>
+                  <button className="btn-primary btn-sm" onClick={() => setShowForm(true)}>+ Post your first job</button>
+                </div>
               </div>
             ) : (
-              <div className="jobs-list">
+              <div className="job-list">
                 {jobs.map((job) => (
-                  <div key={job.id} className="job-card">
+                  <div key={job.id} className="panel-card">
                     <div className="job-card-top">
                       <div>
                         <h4>{job.title}</h4>
                         <div className="job-tags">
-                          <span className="tag tag-cgpa">CGPA ≥ {job.min_cgpa}</span>
-                          {job.department_ids.map((id) => (
-                            <span key={id} className="tag tag-dept">{departmentName(id)}</span>
-                          ))}
+                          <span className="badge badge-blue">CGPA ≥ {job.min_cgpa}</span>
+                          {job.department_ids.map((id) => <span key={id} className="tag">{departmentName(id)}</span>)}
                         </div>
                       </div>
-                      <button className="delete-icon-button" onClick={() => handleDeleteJob(job.id)} title="Delete job">
-                        🗑
-                      </button>
+                      <button className="icon-btn" onClick={() => handleDeleteJob(job.id)} title="Delete job">🗑</button>
                     </div>
 
-                    {job.description && <p className="job-description">{job.description}</p>}
-                    {job.required_skills && (
-                      <p className="job-skills-line">{job.required_skills}</p>
-                    )}
+                    {job.description && <p className="job-desc">{job.description}</p>}
+                    {job.required_skills && <p className="job-skills-line">{job.required_skills}</p>}
 
                     <button className="applicants-toggle" onClick={() => toggleApplicants(job.id)}>
                       <span>{expandedJobId === job.id ? '▾' : '▸'} Applicants</span>
-                      {applicantCount(job.id) !== undefined && (
-                        <span className="applicant-count">{applicantCount(job.id)}</span>
-                      )}
+                      {applicantCount(job.id) !== undefined && <span className="count-pill">{applicantCount(job.id)}</span>}
                     </button>
 
                     {expandedJobId === job.id && (
                       <div className="applicants-panel">
                         {loadingApplicants && !applicantsByJob[job.id] ? (
-                          <p className="loading-text">Loading applicants...</p>
+                          <p className="muted-text">Loading applicants...</p>
                         ) : applicantsByJob[job.id]?.length === 0 ? (
-                          <p className="applicants-empty">No applicants yet.</p>
+                          <div className="empty-state">No applicants yet.</div>
                         ) : (
                           <div className="applicants-list">
                             {applicantsByJob[job.id]?.map((a) => (
                               <div key={a.application_id} className="applicant-row">
                                 <div className="applicant-main">
-                                  <span className="applicant-name">{a.full_name}</span>
-                                  <span className="applicant-roll">
-                                    {a.roll_number} · {departmentName(a.department_id)} · CGPA {a.cgpa}
-                                  </span>
+                                  <span className="cell-strong">{a.full_name}</span>
+                                  <span className="muted-text">{a.roll_number} · {departmentName(a.department_id)} · CGPA {a.cgpa}</span>
                                 </div>
+
                                 <div className="applicant-side">
-                                  <span className={`applicant-status-badge ${statusBadgeClass(a.status)}`}>
-                                    {a.status.replace('_', ' ')}
-                                  </span>
+                                  <span className={`badge ${statusBadgeClass(a.status)}`}>{a.status.replace('_', ' ')}</span>
                                   <div className="status-actions">
-                                    <button
-                                      className="status-action shortlist"
-                                      disabled={updatingStatusId === a.application_id}
-                                      onClick={() => handleStatusChange(a.application_id, 'shortlisted', job.id)}
-                                    >
-                                      Shortlist
-                                    </button>
-                                    <button
-                                      className="status-action select"
-                                      disabled={updatingStatusId === a.application_id}
-                                      onClick={() => handleStatusChange(a.application_id, 'selected', job.id)}
-                                    >
-                                      Select
-                                    </button>
-                                    <button
-                                      className="status-action reject"
-                                      disabled={updatingStatusId === a.application_id}
-                                      onClick={() => handleStatusChange(a.application_id, 'rejected', job.id)}
-                                    >
-                                      Reject
-                                    </button>
+                                    {a.status === 'applied' && (
+                                      <button
+                                        className="btn-chip chip-amber"
+                                        disabled={updatingStatusId === a.application_id}
+                                        onClick={() => handleStatusChange(a.application_id, 'shortlisted', job.id)}
+                                      >
+                                        Shortlist
+                                      </button>
+                                    )}
+                                    {(a.status === 'shortlisted' || a.status === 'interview_scheduled') && (
+                                      <button
+                                        className="btn-chip chip-green"
+                                        disabled={updatingStatusId === a.application_id}
+                                        onClick={() => handleStatusChange(a.application_id, 'selected', job.id)}
+                                      >
+                                        Select
+                                      </button>
+                                    )}
+                                    {a.status !== 'selected' && a.status !== 'rejected' && (
+                                      <button
+                                        className="btn-chip chip-red"
+                                        disabled={updatingStatusId === a.application_id}
+                                        onClick={() => handleStatusChange(a.application_id, 'rejected', job.id)}
+                                      >
+                                        Reject
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
 
                                 {a.status === 'shortlisted' && (
-                                  <button
-                                    className="schedule-interview-button"
-                                    onClick={() => openScheduleModal(a.application_id)}
-                                  >
+                                  <button className="btn-chip chip-teal" onClick={() => openScheduleModal(a.application_id)}>
                                     📅 Schedule Interview
                                   </button>
                                 )}
@@ -401,45 +322,31 @@ function CompanyDashboard() {
                                 {a.status === 'interview_scheduled' && interviewsByApplication[a.application_id] && (
                                   <div className="interview-info">
                                     <p className="interview-detail">
-                                      <strong>When:</strong>{' '}
-                                      {new Date(
-                                        interviewsByApplication[a.application_id].scheduled_at
-                                      ).toLocaleString()}
+                                      <strong>When:</strong> {new Date(interviewsByApplication[a.application_id].scheduled_at).toLocaleString()}
                                     </p>
                                     <p className="interview-detail">
                                       <strong>Mode:</strong> {interviewsByApplication[a.application_id].mode}
                                     </p>
                                     {interviewsByApplication[a.application_id].location_or_link && (
                                       <p className="interview-detail">
-                                        <strong>Link/Venue:</strong>{' '}
-                                        {interviewsByApplication[a.application_id].location_or_link}
+                                        <strong>Link/Venue:</strong> {interviewsByApplication[a.application_id].location_or_link}
                                       </p>
                                     )}
-                                    <div className="interview-result-actions">
+                                    <div className="status-actions">
                                       <button
-                                        className="status-action select"
+                                        className="btn-chip chip-green"
                                         disabled={recordingResultId === interviewsByApplication[a.application_id].id}
                                         onClick={() =>
-                                          handleRecordResult(
-                                            interviewsByApplication[a.application_id].id,
-                                            'passed',
-                                            a.application_id,
-                                            job.id
-                                          )
+                                          handleRecordResult(interviewsByApplication[a.application_id].id, 'passed', a.application_id, job.id)
                                         }
                                       >
                                         Mark Passed
                                       </button>
                                       <button
-                                        className="status-action reject"
+                                        className="btn-chip chip-red"
                                         disabled={recordingResultId === interviewsByApplication[a.application_id].id}
                                         onClick={() =>
-                                          handleRecordResult(
-                                            interviewsByApplication[a.application_id].id,
-                                            'failed',
-                                            a.application_id,
-                                            job.id
-                                          )
+                                          handleRecordResult(interviewsByApplication[a.application_id].id, 'failed', a.application_id, job.id)
                                         }
                                       >
                                         Mark Failed
@@ -460,128 +367,67 @@ function CompanyDashboard() {
           </div>
         </div>
 
-        {/* Post Job Modal */}
         {showForm && (
           <div className="modal-overlay" onClick={closeForm}>
             <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>Post a New Job</h3>
-                <button className="modal-close" onClick={closeForm}>×</button>
-              </div>
-
-              <form className="post-job-form" onSubmit={handlePostJob}>
+              <div className="modal-header"><h3>Post a New Job</h3><button className="modal-close" onClick={closeForm}>×</button></div>
+              <form className="modal-form" onSubmit={handlePostJob}>
                 <div className="form-group">
                   <label>Job Title</label>
-                  <input
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="e.g. Software Developer"
-                    required
-                  />
+                  <input name="title" value={formData.title} onChange={handleChange} placeholder="e.g. Software Developer" required />
                 </div>
-
                 <div className="form-group">
                   <label>Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Brief job description"
-                    rows={3}
-                  />
+                  <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Brief job description" rows={3} />
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Minimum CGPA</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="min_cgpa"
-                      value={formData.min_cgpa}
-                      onChange={handleChange}
-                      placeholder="e.g. 7.5"
-                    />
+                    <input type="number" step="0.01" name="min_cgpa" value={formData.min_cgpa} onChange={handleChange} placeholder="e.g. 7.5" />
                   </div>
                   <div className="form-group">
                     <label>Required Skills</label>
                     <div className="chips-input-box">
                       {skillsList.map((skill) => (
-                        <span key={skill} className="skill-chip">
-                          {skill}
-                          <button type="button" className="skill-chip-remove" onClick={() => removeSkill(skill)}>×</button>
-                        </span>
+                        <span key={skill} className="chip-tag">{skill}<button type="button" className="chip-remove" onClick={() => removeSkill(skill)}>×</button></span>
                       ))}
-                      <input
-                        className="chip-text-input"
-                        value={skillInput}
-                        onChange={(e) => setSkillInput(e.target.value)}
-                        onKeyDown={handleSkillInputKeyDown}
-                        placeholder={skillsList.length === 0 ? 'Type a skill, press Enter' : ''}
-                      />
+                      <input className="chip-text-input" value={skillInput} onChange={(e) => setSkillInput(e.target.value)} onKeyDown={handleSkillInputKeyDown} placeholder={skillsList.length === 0 ? 'Type a skill, press Enter' : ''} />
                     </div>
                   </div>
                 </div>
-
                 <div className="form-group">
                   <label>Eligible Departments</label>
-                  <div className="department-chips">
+                  <div className="dept-chip-row">
                     {departments.map((d) => (
-                      <button
-                        type="button"
-                        key={d.id}
-                        className={`dept-chip ${formData.department_ids.includes(d.id) ? 'selected' : ''}`}
-                        onClick={() => toggleDepartment(d.id)}
-                      >
-                        {d.code}
-                      </button>
+                      <button type="button" key={d.id} className={`dept-chip ${formData.department_ids.includes(d.id) ? 'selected' : ''}`} onClick={() => toggleDepartment(d.id)}>{d.code}</button>
                     ))}
                   </div>
                 </div>
-
-                {formError && <p className="company-error">{formError}</p>}
-
+                {formError && <p className="error-message">{formError}</p>}
                 <div className="modal-actions">
-                  <button type="button" className="cancel-button" onClick={closeForm}>Cancel</button>
-                  <button type="submit" className="submit-job-button" disabled={submitting}>
-                    {submitting ? 'Posting...' : 'Post Job'}
-                  </button>
+                  <button type="button" className="btn-ghost" onClick={closeForm}>Cancel</button>
+                  <button type="submit" className="btn-success" disabled={submitting}>{submitting ? 'Posting...' : 'Post Job'}</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* Schedule Interview Modal */}
         {scheduleModalApp && (
           <div className="modal-overlay" onClick={closeScheduleModal}>
             <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>Schedule Interview</h3>
-                <button className="modal-close" onClick={closeScheduleModal}>×</button>
-              </div>
-
+              <div className="modal-header"><h3>Schedule Interview</h3><button className="modal-close" onClick={closeScheduleModal}>×</button></div>
               <form
-                className="post-job-form"
+                className="modal-form"
                 onSubmit={(e) => {
-                  const job = jobs.find((j) =>
-                    applicantsByJob[j.id]?.some((a) => a.application_id === scheduleModalApp)
-                  )
+                  const job = jobs.find((j) => applicantsByJob[j.id]?.some((a) => a.application_id === scheduleModalApp))
                   handleScheduleSubmit(e, job?.id)
                 }}
               >
                 <div className="form-group">
                   <label>Date &amp; Time</label>
-                  <input
-                    type="datetime-local"
-                    name="scheduled_at"
-                    value={scheduleForm.scheduled_at}
-                    onChange={handleScheduleFormChange}
-                    required
-                  />
+                  <input type="datetime-local" name="scheduled_at" value={scheduleForm.scheduled_at} onChange={handleScheduleFormChange} required />
                 </div>
-
                 <div className="form-group">
                   <label>Mode</label>
                   <select name="mode" value={scheduleForm.mode} onChange={handleScheduleFormChange}>
@@ -589,45 +435,24 @@ function CompanyDashboard() {
                     <option value="offline">Offline</option>
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label>{scheduleForm.mode === 'online' ? 'Meeting Link' : 'Venue'}</label>
-                  <input
-                    name="location_or_link"
-                    value={scheduleForm.location_or_link}
-                    onChange={handleScheduleFormChange}
-                    placeholder={
-                      scheduleForm.mode === 'online'
-                        ? 'https://meet.google.com/...'
-                        : 'e.g. Room 302, Admin Block'
-                    }
-                  />
+                  <input name="location_or_link" value={scheduleForm.location_or_link} onChange={handleScheduleFormChange} placeholder={scheduleForm.mode === 'online' ? 'https://meet.google.com/...' : 'e.g. Room 302'} />
                 </div>
-
                 <div className="form-group">
                   <label>Notes (optional)</label>
-                  <textarea
-                    name="notes"
-                    value={scheduleForm.notes}
-                    onChange={handleScheduleFormChange}
-                    placeholder="Any instructions for the candidate"
-                    rows={2}
-                  />
+                  <textarea name="notes" value={scheduleForm.notes} onChange={handleScheduleFormChange} placeholder="Any instructions" rows={2} />
                 </div>
-
-                {scheduleError && <p className="company-error">{scheduleError}</p>}
-
+                {scheduleError && <p className="error-message">{scheduleError}</p>}
                 <div className="modal-actions">
-                  <button type="button" className="cancel-button" onClick={closeScheduleModal}>Cancel</button>
-                  <button type="submit" className="submit-job-button" disabled={scheduling}>
-                    {scheduling ? 'Scheduling...' : 'Schedule'}
-                  </button>
+                  <button type="button" className="btn-ghost" onClick={closeScheduleModal}>Cancel</button>
+                  <button type="submit" className="btn-success" disabled={scheduling}>{scheduling ? 'Scheduling...' : 'Schedule'}</button>
                 </div>
               </form>
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }
