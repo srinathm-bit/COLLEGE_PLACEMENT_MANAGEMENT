@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../api/axios.js'
 import { useAuth } from '../context/Authcontext.jsx'
-import './Login.css'
+import './login.css'
 
 const LOGIN_ENDPOINTS = {
   student: '/api/auth/student/login',
