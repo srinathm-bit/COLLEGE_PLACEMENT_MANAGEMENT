@@ -14,7 +14,7 @@ class StudentRegister(BaseModel):
     cgpa: float = 0
     active_backlogs: int = 0
     phone: str | None = None
-    skills: str | None = None
+    skills: list[str] | None = None
 
     @field_validator("password")
     @classmethod
@@ -51,7 +51,7 @@ class StudentProfileOut(BaseModel):
     cgpa: float
     active_backlogs: int
     phone: str | None = None
-    skills: str | None = None
+    skills: list[str] | None = None
     resume_filename: str | None = None
     resume_uploaded_at: datetime | None = None
 
@@ -65,7 +65,7 @@ class StudentProfileUpdate(BaseModel):
     cgpa: float | None = None
     active_backlogs: int | None = None
     phone: str | None = None
-    skills: str | None = None
+    skills: list[str] | None = None
 
 
 class AdminStudentUpdate(BaseModel):
@@ -77,7 +77,7 @@ class AdminStudentUpdate(BaseModel):
     active_backlogs: int | None = None
     phone: str | None = None
     roll_number: str | None = None
-    skills: str | None = None
+    skills: list[str] | None = None
 
 
 class ResumeOut(BaseModel):

@@ -8,7 +8,7 @@ class JobCreate(BaseModel):
     title: str
     description: str | None = None
     min_cgpa: float = 0
-    required_skills: str | None = None
+    required_skills: list[str] | None = None
     department_ids: list[int]
 
 
@@ -19,7 +19,7 @@ class JobOut(BaseModel):
     title: str
     description: str | None = None
     min_cgpa: float
-    required_skills: str | None = None
+    required_skills: list[str] | None = None
     created_at: datetime
     department_ids: list[int]
 
