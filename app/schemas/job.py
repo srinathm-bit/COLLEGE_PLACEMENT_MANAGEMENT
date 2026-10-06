@@ -1,7 +1,7 @@
 from datetime import datetime
-
+from pydantic import BaseModel, field_validator
 from pydantic import BaseModel
-
+from typing import List
 
 class JobCreate(BaseModel):
     """Company posts a new job."""
