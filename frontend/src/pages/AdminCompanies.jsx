@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './AdminCompanies.css'
+import { Link } from 'react-router-dom'
 
 function AdminCompanies() {
   const [companies, setCompanies] = useState([])
@@ -139,7 +140,9 @@ function AdminCompanies() {
               <tbody>
                 {companies.map((c) => (
                   <tr key={c.id}>
-                    <td className="cell-strong">{c.company_name}</td>
+                    <td className="cell-strong">
+                     <Link to={`/admin/companies/${c.id}`} className="link-accent">{c.company_name}</Link>
+                    </td>
                     <td>{c.industry || '—'}</td>
                     <td>{c.email}</td>
                     <td>{c.contact_person || '—'}</td>

@@ -8,6 +8,8 @@ import AdminStudents from './pages/AdminStudents.jsx'
 import AdminDepartments from './pages/AdminDepartments.jsx'
 import AdminCompanies from './pages/AdminCompanies.jsx'
 import AdminApplications from './pages/AdminApplications.jsx'
+import AdminCompanyDetail from './pages/AdminCompanyDetail.jsx'
+import AdminStudentDetail from './pages/AdminStudentDetail.jsx'
 
 function App() {
   return (
@@ -77,6 +79,23 @@ function App() {
         }
         
 />
+      <Route
+         path="/admin/companies/:id"
+          element={
+            <PrivateRoute allowedRole="admin">
+              <AdminCompanyDetail />
+             </PrivateRoute>
+        }
+/>
+      <Route
+        path="/admin/students/:id"
+        element={
+          <PrivateRoute allowedRole="admin">
+            <AdminStudentDetail />
+          </PrivateRoute>
+        }
+/>
+       
     </Routes>
   )
 }

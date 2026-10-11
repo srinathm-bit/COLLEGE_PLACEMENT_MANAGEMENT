@@ -230,7 +230,9 @@ function AdminStudents() {
                 {students.map((s) => (
                   <tr key={s.id}>
                     <td>{s.roll_number}</td>
-                    <td className="cell-strong">{s.full_name}</td>
+                    <td className="cell-strong">
+                      <Link to={`/admin/students/${s.id}`} className="link-accent">{s.full_name}</Link>
+                    </td>
                     <td>{departmentName(s.department_id)}</td>
                     <td>{s.graduation_year}</td>
                     <td>{s.cgpa}</td>

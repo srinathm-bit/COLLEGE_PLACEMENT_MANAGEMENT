@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.models.company import Company
 from app.models.enums import UserRole
 from app.schemas.company import CompanyCreate, CompanyProfileOut
+from app.crud.admin_detail import get_company_details
 
 router = APIRouter(prefix="/api/admin/companies", tags=["Admin - Company Management"])
 
@@ -63,3 +64,10 @@ def admin_delete_company(company_id: int, db: Session = Depends(get_db), _admin=
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     delete_company(db, company)
+
+@router.get("/{company_id}/details")
+def admin_company_details(company_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
+    company = get_company_by_id(db, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return get_company_details(db, company)
