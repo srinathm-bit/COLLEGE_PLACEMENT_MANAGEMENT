@@ -5,6 +5,13 @@ from typing import List
 from pydantic import BaseModel, EmailStr, field_validator
 
 
+def _skills_to_list(v):
+    if v is None:
+        return None
+    if isinstance(v, str):
+        return [s.strip() for s in v.split(",") if s.strip()]
+    return v 
+
 class StudentRegister(BaseModel):
     """Public registration payload — creates both the User and Student rows."""
     email: EmailStr
@@ -17,6 +24,11 @@ class StudentRegister(BaseModel):
     active_backlogs: int = 0
     phone: str | None = None
     skills: list[str] | None = None
+
+    @field_validator("skills", mode="before")
+    @classmethod
+    def skills_as_list(cls, v):
+        return _skills_to_list(v)
 
     @field_validator("password")
     @classmethod
@@ -54,6 +66,11 @@ class StudentProfileOut(BaseModel):
     active_backlogs: int
     phone: str | None = None
     skills: list[str] | None = None
+
+    @field_validator("skills", mode="before")
+    @classmethod
+    def skills_as_list(cls, v):
+        return _skills_to_list(v)
     resume_filename: str | None = None
     resume_uploaded_at: datetime | None = None
 
@@ -69,6 +86,11 @@ class StudentProfileUpdate(BaseModel):
     phone: str | None = None
     skills: list[str] | None = None
 
+    @field_validator("skills", mode="before")
+    @classmethod
+    def skills_as_list(cls, v):
+        return _skills_to_list(v)
+
 
 class AdminStudentUpdate(BaseModel):
     """Fields an admin may update on any student's profile — superset of self-update."""
@@ -80,6 +102,11 @@ class AdminStudentUpdate(BaseModel):
     phone: str | None = None
     roll_number: str | None = None
     skills: list[str] | None = None
+
+    @field_validator("skills", mode="before")
+    @classmethod
+    def skills_as_list(cls, v):
+        return _skills_to_list(v)
 
 
 class ResumeOut(BaseModel):

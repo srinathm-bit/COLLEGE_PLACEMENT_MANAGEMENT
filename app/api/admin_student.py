@@ -30,6 +30,7 @@ def _to_profile_out(db: Session, student: Student) -> StudentProfileOut:
         cgpa=float(student.cgpa),
         active_backlogs=student.active_backlogs,
         phone=student.phone,
+        skills=student.skills,
         resume_filename=student.resume_filename,
         resume_uploaded_at=student.resume_uploaded_at,
     )

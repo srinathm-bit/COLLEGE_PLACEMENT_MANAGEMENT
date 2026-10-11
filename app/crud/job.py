@@ -22,6 +22,19 @@ def create_job(db: Session, company_id: int, payload: JobCreate) -> Job:
     return job
 
 
+def get_job_by_id(db: Session, job_id: int) -> Job | None:
+    return db.query(Job).filter(Job.id == job_id).first()
+
+
+def list_jobs_by_company(db: Session, company_id: int) -> list[Job]:
+    return db.query(Job).filter(Job.company_id == company_id).all()
+
+
+def delete_job(db: Session, job: Job) -> None:
+    db.delete(job)
+    db.commit()
+
+
 def job_to_out(job: Job) -> dict:
     return {
         "id": job.id,
@@ -35,13 +48,14 @@ def job_to_out(job: Job) -> dict:
         "department_ids": [d.id for d in job.departments],
     }
 
-def list_jobs_by_company(db: Session, company_id: int) -> list[Job]:
-    return db.query(Job).filter(Job.company_id == company_id).all()
 
-def _parse_skills(skills_str: str | None) -> set[str]:
-    if not skills_str:
+def _parse_skills(skills) -> set[str]:
+    """Works for both a list (new data) and a comma string (old data)."""
+    if not skills:
         return set()
-    return {s.strip().lower() for s in skills_str.split(",") if s.strip()}
+    if isinstance(skills, str):
+        skills = skills.split(",")
+    return {s.strip().lower() for s in skills if s and s.strip()}
 
 
 def get_eligible_jobs(db: Session, student) -> list[Job]:
@@ -70,10 +84,3 @@ def get_eligible_jobs(db: Session, student) -> list[Job]:
         eligible.append(job)
 
     return eligible
-
-def delete_job(db: Session, job: Job) -> None:
-    db.delete(job)
-    db.commit()
-
-def get_job_by_id(db: Session, job_id: int) -> Job | None:
-    return db.query(Job).filter(Job.id == job_id).first()
