@@ -24,4 +24,6 @@ class Interview(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    application = relationship("Application", backref=backref("interview", uselist=False))
+
+
+    application = relationship("Application", backref=backref("interview", uselist=False, cascade="all, delete-orphan"))

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import String, Text, Numeric, ForeignKey, DateTime, Table, Column, Integer,JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, , relationship, backref
 
 from app.db.session import Base
 
@@ -28,5 +28,5 @@ class Job(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    company = relationship("Company", backref="jobs")
+    company = relationship("Company", backref=backref("jobs", cascade="all, delete-orphan"))
     departments = relationship("Department", secondary=job_departments, backref="jobs")

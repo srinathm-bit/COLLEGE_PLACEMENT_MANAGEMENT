@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import String, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 
 from app.db.session import Base
-
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 class Application(Base):
     __tablename__ = "applications"
@@ -21,5 +21,5 @@ class Application(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
-    student = relationship("Student", backref="applications")
-    job = relationship("Job", backref="applications")
+    student = relationship("Student", backref=backref("applications", cascade="all, delete-orphan"))
+    job = relationship("Job", backref=backref("applications", cascade="all, delete-orphan"))
