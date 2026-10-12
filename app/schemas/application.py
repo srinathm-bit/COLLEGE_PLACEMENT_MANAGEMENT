@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ApplicationStatus(str, Enum):
@@ -43,7 +43,14 @@ class ApplicantOut(BaseModel):
     email: str
     department_id: int
     cgpa: float
-    skills: str | None = None
+    skills: list[str] | None = None
+
+    @field_validator("skills", mode="before")
+    @classmethod
+    def skills_as_list(cls, v):
+        if isinstance(v, str):
+            return [s.strip() for s in v.split(",") if s.strip()]
+        return v
     phone: str | None = None
 
 class AdminApplicationOut(BaseModel):
