@@ -51,5 +51,9 @@ def update_company(db: Session, company: Company, payload: CompanyProfileUpdate)
     return company
 
 def delete_company(db: Session, company: Company) -> None:
+    user = db.query(User).filter(User.id == company.user_id).first()
     db.delete(company)
+    db.flush()
+    if user:
+        db.delete(user)
     db.commit()

@@ -84,5 +84,9 @@ def set_resume(db: Session, student: Student, filename: str, path: str) -> Stude
     return student
 
 def delete_student(db: Session, student: Student) -> None:
+    user = db.query(User).filter(User.id == student.user_id).first()
     db.delete(student)
+    db.flush()
+    if user:
+        db.delete(user)
     db.commit()
