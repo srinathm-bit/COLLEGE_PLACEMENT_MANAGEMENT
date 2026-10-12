@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy import String, Text, Numeric, ForeignKey, DateTime, Table, Column, Integer,JSON
-from sqlalchemy.orm import Mapped, mapped_column, , relationship, backref
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from app.db.session import Base
 
