@@ -18,7 +18,7 @@ from app.schemas.student import ResumeOut, StudentProfileOut, StudentProfileUpda
 from app.crud.job import get_eligible_jobs, job_to_out, get_job_by_id
 from app.crud.application import has_already_applied, create_application, get_my_applications
 from app.schemas.application import ApplicationOut
-
+from app.core.academic_year import student_year, student_year_label
 router = APIRouter(prefix="/api/students", tags=["Student Self-Service"])
 
 require_student = require_role(UserRole.STUDENT)
@@ -44,6 +44,8 @@ def _to_profile_out(student: Student, email: str) -> StudentProfileOut:
         active_backlogs=student.active_backlogs,
         phone=student.phone,
         skills=student.skills,
+        current_year=student_year(student),
+        year_label=student_year_label(student),
         resume_filename=student.resume_filename,
         resume_uploaded_at=student.resume_uploaded_at,
     )

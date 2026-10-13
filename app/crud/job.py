@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.department import Department
 from app.models.job import Job
 from app.schemas.job import JobCreate
-
+from app.core.academic_year import get_year_of_study
 
 def create_job(db: Session, company_id: int, payload: JobCreate) -> Job:
     departments = db.query(Department).filter(Department.id.in_(payload.department_ids)).all()
@@ -13,6 +13,7 @@ def create_job(db: Session, company_id: int, payload: JobCreate) -> Job:
         title=payload.title,
         description=payload.description,
         min_cgpa=payload.min_cgpa,
+        min_year=payload.min_year,
         required_skills=payload.required_skills,
         departments=departments,
     )
@@ -43,6 +44,7 @@ def job_to_out(job: Job) -> dict:
         "title": job.title,
         "description": job.description,
         "min_cgpa": float(job.min_cgpa),
+        "min_year": job.min_year,
         "required_skills": job.required_skills,
         "created_at": job.created_at,
         "department_ids": [d.id for d in job.departments],
@@ -59,14 +61,10 @@ def _parse_skills(skills) -> set[str]:
 
 
 def get_eligible_jobs(db: Session, student) -> list[Job]:
-    """
-    Computed eligibility - not stored. A job is eligible if:
-    - student's cgpa >= job's min_cgpa
-    - student's department is among the job's eligible departments
-    - student has ALL of the job's required skills
-    """
+
     all_jobs = db.query(Job).all()
     student_skills = _parse_skills(student.skills)
+    student_year = get_year_of_study(student.graduation_year, student.department.duration_years)
 
     eligible = []
     for job in all_jobs:
@@ -75,6 +73,9 @@ def get_eligible_jobs(db: Session, student) -> list[Job]:
 
         job_department_ids = {d.id for d in job.departments}
         if job_department_ids and student.department_id not in job_department_ids:
+            continue
+
+        if job.min_year is not None and student_year < job.min_year:
             continue
 
         required_skills = _parse_skills(job.required_skills)

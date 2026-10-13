@@ -23,6 +23,7 @@ class Job(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
     min_cgpa: Mapped[float] = mapped_column(Numeric(4, 2), nullable=False, default=0)
+    min_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     required_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

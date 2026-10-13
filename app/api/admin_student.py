@@ -11,7 +11,7 @@ from app.db.session import get_db
 from app.models.enums import UserRole
 from app.models.student import Student
 from app.schemas.student import AdminStudentUpdate, StudentProfileOut
-
+from app.core.academic_year import student_year, student_year_label
 router = APIRouter(prefix="/api/admin/students", tags=["Admin - Student Management"])
 
 require_admin = require_role(UserRole.ADMIN)
@@ -31,6 +31,8 @@ def _to_profile_out(db: Session, student: Student) -> StudentProfileOut:
         active_backlogs=student.active_backlogs,
         phone=student.phone,
         skills=student.skills,
+        current_year=student_year(student),
+        year_label=student_year_label(student),
         resume_filename=student.resume_filename,
         resume_uploaded_at=student.resume_uploaded_at,
     )

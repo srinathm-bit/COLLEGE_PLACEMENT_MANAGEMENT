@@ -64,3 +64,12 @@ class AdminApplicationOut(BaseModel):
     interview_scheduled_at: datetime | None = None
     interview_mode: str | None = None
     interview_result: str | None = None
+    
+class CompanyCandidateOut(ApplicantOut):
+    job_id: int
+    job_title: str
+    interview_id: int | None = None
+    interview_scheduled_at: datetime | None = None
+    interview_mode: str | None = None
+    interview_location_or_link: str | None = None
+    interview_result: str | None = None

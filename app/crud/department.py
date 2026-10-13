@@ -5,7 +5,11 @@ from app.schemas.department import DepartmentCreate
 
 
 def create_department(db: Session, payload: DepartmentCreate) -> Department:
-    department = Department(name=payload.name, code=payload.code)
+    department = Department(
+        name=payload.name,
+        code=payload.code,
+        duration_years=payload.duration_years,
+    )
     db.add(department)
     db.commit()
     db.refresh(department)

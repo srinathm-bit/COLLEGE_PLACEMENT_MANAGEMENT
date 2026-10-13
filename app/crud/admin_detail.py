@@ -5,7 +5,7 @@ from app.models.company import Company
 from app.models.job import Job
 from app.models.student import Student
 from app.models.user import User
-
+from app.core.academic_year import student_year, student_year_label
 
 def get_company_details(db: Session, company: Company) -> dict:
     user = db.query(User).filter(User.id == company.user_id).first()
@@ -97,6 +97,8 @@ def get_student_details(db: Session, student: Student) -> dict:
             "roll_number": student.roll_number,
             "department_id": student.department_id,
             "graduation_year": student.graduation_year,
+            "current_year": student_year(student),
+            "year_label": student_year_label(student),
             "cgpa": float(student.cgpa),
             "active_backlogs": student.active_backlogs,
             "phone": student.phone,

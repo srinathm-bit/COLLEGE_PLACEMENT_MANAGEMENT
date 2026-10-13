@@ -21,7 +21,10 @@ from app.crud.application import get_applicants_for_job
 from app.schemas.application import ApplicantOut
 from app.crud.application import get_applicants_for_job, get_application_by_id, update_application_status
 from app.schemas.application import ApplicantOut, ApplicationOut, ApplicationStatusUpdate
-
+from app.core.academic_year import student_year, student_year_label
+from app.crud.admin_detail import get_company_details
+from app.crud.application import get_candidates_for_company
+from app.schemas.application import CompanyCandidateOut
 
 
 router = APIRouter(prefix="/api/companies", tags=["Company Self-Service"])
@@ -43,6 +46,8 @@ def _to_profile_out(db: Session, student: Student) -> StudentProfileOut:
         active_backlogs=student.active_backlogs,
         phone=student.phone,
         skills=student.skills,
+        current_year=student_year(student),
+        year_label=student_year_label(student),
         resume_filename=student.resume_filename,
         resume_uploaded_at=student.resume_uploaded_at,
     )
@@ -240,3 +245,20 @@ def company_update_interview(
         update_application_status(db, interview.application, "rejected")
 
     return interview
+
+@router.get("/me/stats")
+def company_stats(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    return get_company_details(db, company)["stats"]
+
+
+@router.get("/applicants", response_model=list[CompanyCandidateOut])
+def company_list_all_candidates(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_company),
+):
+    company = _get_current_company(db, current_user)
+    return get_candidates_for_company(db, company.id)

@@ -98,3 +98,41 @@ def get_all_applications(db: Session, status: str | None = None) -> list[dict]:
             "interview_result": interview.result if interview else None,
         })
     return result
+
+def get_candidates_for_company(db: Session, company_id: int) -> list[dict]:
+    """All applicants across every job of one company, with job and interview info."""
+    applications = (
+        db.query(Application)
+        .join(Application.job)
+        .filter(Job.company_id == company_id)
+        .order_by(Application.applied_at.desc())
+        .all()
+    )
+
+    result = []
+    for app in applications:
+        student = app.student
+        user = db.query(User).filter(User.id == student.user_id).first()
+        interview = app.interview
+
+        result.append({
+            "application_id": app.id,
+            "status": app.status,
+            "applied_at": app.applied_at,
+            "student_id": student.id,
+            "full_name": student.full_name,
+            "roll_number": student.roll_number,
+            "email": user.email if user else "",
+            "department_id": student.department_id,
+            "cgpa": float(student.cgpa),
+            "skills": student.skills,
+            "phone": student.phone,
+            "job_id": app.job.id,
+            "job_title": app.job.title,
+            "interview_id": interview.id if interview else None,
+            "interview_scheduled_at": interview.scheduled_at if interview else None,
+            "interview_mode": interview.mode if interview else None,
+            "interview_location_or_link": interview.location_or_link if interview else None,
+            "interview_result": interview.result if interview else None,
+        })
+    return result

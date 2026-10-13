@@ -73,6 +73,8 @@ class StudentProfileOut(BaseModel):
         return _skills_to_list(v)
     resume_filename: str | None = None
     resume_uploaded_at: datetime | None = None
+    current_year: int | None = None
+    year_label: str | None = None
 
     model_config = {"from_attributes": True}
 

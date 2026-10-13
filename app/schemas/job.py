@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 def _skills_to_list(v):
@@ -16,6 +16,7 @@ class JobCreate(BaseModel):
     title: str
     description: str | None = None
     min_cgpa: float = 0
+    min_year: int | None = Field(default=None, ge=1, le=6)
     required_skills: list[str] | None = None
     department_ids: list[int]
 
@@ -32,6 +33,7 @@ class JobOut(BaseModel):
     title: str
     description: str | None = None
     min_cgpa: float
+    min_year: int | None = None
     required_skills: list[str] | None = None
     created_at: datetime
     department_ids: list[int]
