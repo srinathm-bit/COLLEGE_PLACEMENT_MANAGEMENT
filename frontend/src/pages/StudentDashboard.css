@@ -114,3 +114,4 @@
 
 .interview-when { margin: 4px 0; font-size: 12.5px; font-weight: 600; color: #334155; }
 .interview-notes { margin: 4px 0 0; font-size: 11.5px; color: var(--color-text-muted); font-style: italic; }
+.job-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }

@@ -174,6 +174,7 @@ function StudentDashboard() {
                 <div className="profile-list">
                   <div className="profile-row"><span className="profile-label">Name</span><span>{profile.full_name}</span></div>
                   <div className="profile-row"><span className="profile-label">Roll No.</span><span>{profile.roll_number}</span></div>
+                  <div className="profile-row"><span className="profile-label">Year</span><span>{profile.year_label || '—'}</span></div>
                   <div className="profile-row"><span className="profile-label">CGPA</span><span>{profile.cgpa}</span></div>
                   <div className="profile-row"><span className="profile-label">Backlogs</span><span>{profile.active_backlogs}</span></div>
                   <div className="profile-row"><span className="profile-label">Phone</span><span>{profile.phone || '—'}</span></div>
@@ -252,7 +253,10 @@ function StudentDashboard() {
                           <h4>{job.title}</h4>
                           <p className="job-company">{job.company_name}</p>
                         </div>
-                        <span className="badge badge-blue">CGPA ≥ {job.min_cgpa}</span>
+                        <div className="job-badges">
+                          <span className="badge badge-blue">CGPA ≥ {job.min_cgpa}</span>
+                          {job.min_year && <span className="badge badge-teal">Year ≥ {job.min_year}</span>}
+                      </div>
                       </div>
                       {job.description && <p className="job-desc">{job.description}</p>}
                       {job.required_skills && <div className="job-tags">{skillTags(job.required_skills)}</div>}

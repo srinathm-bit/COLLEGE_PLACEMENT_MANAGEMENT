@@ -16,7 +16,7 @@ function CompanyJobs() {
   const [error, setError] = useState('')
 
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ title: '', description: '', min_cgpa: '', department_ids: [] })
+  const [formData, setFormData] = useState({ title: '', description: '', min_cgpa: '', min_year: '', department_ids: [] })
   const [skillsList, setSkillsList] = useState([])
   const [skillInput, setSkillInput] = useState('')
   const [formError, setFormError] = useState('')
@@ -67,7 +67,7 @@ function CompanyJobs() {
 
   function closeForm() {
     setShowForm(false)
-    setFormData({ title: '', description: '', min_cgpa: '', department_ids: [] })
+    setFormData({ title: '', description: '', min_cgpa: '', min_year: '', department_ids: [] })
     setSkillsList([])
     setSkillInput('')
     setFormError('')
@@ -87,6 +87,7 @@ function CompanyJobs() {
       await api.post('/api/companies/jobs', {
         ...formData,
         min_cgpa: parseFloat(formData.min_cgpa) || 0,
+        min_year: formData.min_year ? parseInt(formData.min_year) : null,
         required_skills: skillsList,
       })
       closeForm()
@@ -138,6 +139,7 @@ function CompanyJobs() {
                     <h4>{job.title}</h4>
                     <div className="cj-tags">
                       <span className="cj-badge">CGPA ≥ {job.min_cgpa}</span>
+                      {job.min_year && <span className="cj-badge cj-badge-year">Year ≥ {job.min_year}</span>}
                       {job.department_ids.map((id) => (
                         <span key={id} className="cj-tag">{departmentCode(id)}</span>
                       ))}
@@ -205,6 +207,15 @@ function CompanyJobs() {
                       />
                     </div>
                   </div>
+                </div>
+                <div className="cj-group">
+                  <label>Minimum Year of Study</label>
+                  <select name="min_year" value={formData.min_year} onChange={handleChange}>
+                      <option value="">Any year</option>
+                      <option value="2">2nd year and above</option>
+                      <option value="3">3rd year and above</option>
+                      <option value="4">4th year and above</option>
+                  </select>
                 </div>
                 <div className="cj-group">
                   <label>Eligible Departments</label>

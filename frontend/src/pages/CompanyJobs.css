@@ -62,3 +62,7 @@
 .cj-dept { padding: 6px 14px; border: 1px solid var(--color-border); border-radius: 16px; background: #fff; color: var(--color-text); font-size: 12px; font-weight: 600; cursor: pointer; }
 .cj-dept.selected { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
 .cj-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+
+.cj-badge-year { background: #f5f3ff; color: #6d28d9; }
+.cj-group select { padding: 9px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 13px; outline: none; font-family: inherit; background: #fff; }
+.cj-group select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }

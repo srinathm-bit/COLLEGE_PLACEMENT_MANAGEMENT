@@ -108,6 +108,7 @@ function AdminStudentDetail() {
             <div className="info-item"><span className="info-label">Phone</span><span>{student.phone || '—'}</span></div>
             <div className="info-item"><span className="info-label">Department</span><span>{departmentCode(student.department_id)}</span></div>
             <div className="info-item"><span className="info-label">Graduation Year</span><span>{student.graduation_year}</span></div>
+            <div className="info-item"><span className="info-label">Current Year</span><span>{student.year_label || '—'}</span></div>
             <div className="info-item"><span className="info-label">CGPA</span><span>{student.cgpa}</span></div>
             <div className="info-item">
               <span className="info-label">Active Backlogs</span>

@@ -182,6 +182,7 @@ function CompanyCandidates() {
                       <td>{c.job_title}</td>
                       <td>
                         {departmentCode(c.department_id)} · {c.cgpa}
+                        {c.year_label && <span className="cc-muted">{c.year_label}</span>}
                       </td>
                       <td>
                         <span className={`cc-badge ${statusClass(c.status)}`}>{c.status.replace('_', ' ')}</span>

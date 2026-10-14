@@ -9,7 +9,7 @@ function AdminDepartments() {
   const [error, setError] = useState('')
 
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', code: '' })
+  const [formData, setFormData] = useState({ name: '', code: '', duration_years: 4 })
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -35,8 +35,8 @@ function AdminDepartments() {
     setSubmitting(true)
 
     try {
-      await api.post('/api/admin/departments', formData)
-      setFormData({ name: '', code: '' })
+      await api.post('/api/admin/departments', { ...formData, duration_years: parseInt(formData.duration_years) || 4 })
+      setFormData({ name: '', code: '', duration_years: 4 })
       setShowForm(false)
       fetchDepartments()
     } catch (err) {
@@ -82,6 +82,15 @@ function AdminDepartments() {
                 <input name="code" value={formData.code} onChange={handleChange} placeholder="e.g. CSE" required />
               </div>
             </div>
+            <div className="form-group">
+                <label>Course Duration</label>
+                <select name="duration_years" value={formData.duration_years} onChange={handleChange}>
+                  <option value={2}>2 years</option>
+                  <option value={3}>3 years</option>
+                  <option value={4}>4 years</option>
+                  <option value={5}>5 years</option>
+                </select>
+            </div>
             {formError && <p className="error-message">{formError}</p>}
             <button type="submit" className="btn-success" disabled={submitting}>
               {submitting ? 'Adding...' : 'Add Department'}
@@ -99,13 +108,14 @@ function AdminDepartments() {
           <div className="table-wrapper">
             <table className="data-table fixed-cols">
               <thead>
-                <tr><th>Name</th><th>Code</th><th>Actions</th></tr>
+                <tr><th>Name</th><th>Code</th><th>Duration</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 {departments.map((d) => (
                   <tr key={d.id}>
                     <td className="cell-strong">{d.name}</td>
                     <td><span className="badge badge-blue">{d.code}</span></td>
+                    <td>{d.duration_years} years</td>
                     <td>
                       <button className="btn-danger-sm" onClick={() => handleDelete(d.id)}>Delete</button>
                     </td>

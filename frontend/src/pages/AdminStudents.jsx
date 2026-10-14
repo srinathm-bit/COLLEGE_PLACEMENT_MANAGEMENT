@@ -222,7 +222,7 @@ function AdminStudents() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Roll No.</th><th>Name</th><th>Department</th><th>Grad Year</th>
+                  <th>Roll No.</th><th>Name</th><th>Department</th><th>Grad Year</th><th>Year</th>
                   <th>CGPA</th><th>Backlogs</th><th>Skills</th><th>Phone</th><th>Actions</th>
                 </tr>
               </thead>
@@ -235,6 +235,7 @@ function AdminStudents() {
                     </td>
                     <td>{departmentName(s.department_id)}</td>
                     <td>{s.graduation_year}</td>
+                    <td><span className="badge badge-blue">{s.year_label || '—'}</span></td>
                     <td>{s.cgpa}</td>
                     <td>
                       <span className={`badge ${s.active_backlogs > 0 ? 'badge-amber' : 'badge-green'}`}>
