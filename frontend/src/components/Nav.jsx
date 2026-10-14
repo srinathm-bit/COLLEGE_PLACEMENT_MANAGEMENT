@@ -15,6 +15,8 @@ const NAV_ITEMS = {
   ],
   company: [
     { label: 'Dashboard', path: '/company-dashboard', icon: '🏠' },
+    { label: 'Jobs', path: '/company/jobs', icon: '💼' },
+    { label: 'Candidates', path: '/company/candidates', icon: '👥' },
   ],
 }
 

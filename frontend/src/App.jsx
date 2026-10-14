@@ -10,6 +10,8 @@ import AdminCompanies from './pages/AdminCompanies.jsx'
 import AdminApplications from './pages/AdminApplications.jsx'
 import AdminCompanyDetail from './pages/AdminCompanyDetail.jsx'
 import AdminStudentDetail from './pages/AdminStudentDetail.jsx'
+import CompanyJobs from './pages/CompanyJobs.jsx'
+import CompanyCandidates from './pages/CompanyCandidates.jsx'
 
 function App() {
   return (
@@ -55,13 +57,31 @@ function App() {
       
       />
       <Route
+        path="/company/jobs"
+        element={
+          <PrivateRoute allowedRole="company">
+            <CompanyJobs />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/company/candidates"
+        element={
+          <PrivateRoute allowedRole="company">
+            <CompanyCandidates />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
         path="/admin/students"
         element={
           <PrivateRoute allowedRole="admin">
             <AdminStudents />
           </PrivateRoute>
-  }
-/>
+        }
+      />
+      
       <Route
         path="/admin/companies"
         element={
