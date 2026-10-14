@@ -4,7 +4,7 @@ from app.models.application import Application
 from app.models.job import Job
 from app.models.student import Student
 from app.models.user import User
-
+from app.core.academic_year import student_year_label
 
 def get_application_by_id(db: Session, application_id: int) -> Application | None:
     return db.query(Application).filter(Application.id == application_id).first()
@@ -127,6 +127,7 @@ def get_candidates_for_company(db: Session, company_id: int) -> list[dict]:
             "cgpa": float(student.cgpa),
             "skills": student.skills,
             "phone": student.phone,
+            "year_label": student_year_label(student),
             "job_id": app.job.id,
             "job_title": app.job.title,
             "interview_id": interview.id if interview else None,

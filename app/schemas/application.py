@@ -73,3 +73,4 @@ class CompanyCandidateOut(ApplicantOut):
     interview_mode: str | None = None
     interview_location_or_link: str | None = None
     interview_result: str | None = None
+    year_label: str | None = None
