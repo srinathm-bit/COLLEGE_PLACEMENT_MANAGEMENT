@@ -11,7 +11,7 @@ from app.api.auth_company import router as auth_company_router
 from app.api.company import router as company_router
 from app.api.admin_company import router as admin_company_router
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.api.admin_announcement import router as admin_announcement_router
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from app.api.department import router as department_router
@@ -38,6 +38,7 @@ app.include_router(company_router)
 app.include_router(admin_company_router)
 app.include_router(department_router)
 app.include_router(admin_application_router)
+app.include_router(admin_announcement_router)
 
 logger = logging.getLogger("uvicorn.error")
 

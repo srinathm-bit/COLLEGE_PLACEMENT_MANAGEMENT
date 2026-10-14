@@ -25,6 +25,8 @@ from app.core.academic_year import student_year, student_year_label
 from app.crud.admin_detail import get_company_details
 from app.crud.application import get_candidates_for_company
 from app.schemas.application import CompanyCandidateOut
+from app.crud.announcement import list_announcements
+from app.schemas.announcement import AnnouncementOut
 
 
 router = APIRouter(prefix="/api/companies", tags=["Company Self-Service"])
@@ -262,3 +264,10 @@ def company_list_all_candidates(
 ):
     company = _get_current_company(db, current_user)
     return get_candidates_for_company(db, company.id)
+
+@router.get("/announcements", response_model=list[AnnouncementOut])
+def company_announcements(
+    db: Session = Depends(get_db),
+    _company=Depends(require_company),
+):
+    return list_announcements(db, "companies")

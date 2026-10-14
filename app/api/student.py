@@ -19,6 +19,9 @@ from app.crud.job import get_eligible_jobs, job_to_out, get_job_by_id
 from app.crud.application import has_already_applied, create_application, get_my_applications
 from app.schemas.application import ApplicationOut
 from app.core.academic_year import student_year, student_year_label
+from app.crud.announcement import list_announcements
+from app.schemas.announcement import AnnouncementOut
+
 router = APIRouter(prefix="/api/students", tags=["Student Self-Service"])
 
 require_student = require_role(UserRole.STUDENT)
@@ -126,3 +129,7 @@ def get_my_applications_route(db: Session = Depends(get_db), current_user: User 
 def get_my_interviews_route(db: Session = Depends(get_db), current_user: User = Depends(require_student)):
     student = _get_own_student_or_404(db, current_user)
     return get_my_interviews(db, student.id)
+
+@router.get("/me/announcements", response_model=list[AnnouncementOut])
+def get_my_announcements(db: Session = Depends(get_db), current_user: User = Depends(require_student)):
+    return list_announcements(db, "students")
