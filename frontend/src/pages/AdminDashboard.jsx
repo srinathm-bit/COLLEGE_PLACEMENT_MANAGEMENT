@@ -36,6 +36,12 @@ function AdminDashboard() {
             <h3>Placement Overview</h3>
             <p>Track applications, statuses and interviews</p>
           </Link>
+
+          <Link to="/admin/announcements" className="dashboard-card">
+          <div className="card-icon-wrap icon-blue">📢</div>
+          <h3>Announcements</h3>
+          <p>Post notices for students and companies</p>
+          </Link>
         </div>
       </main>
     </div>

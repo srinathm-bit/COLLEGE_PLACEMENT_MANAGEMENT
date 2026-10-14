@@ -12,6 +12,8 @@ import AdminCompanyDetail from './pages/AdminCompanyDetail.jsx'
 import AdminStudentDetail from './pages/AdminStudentDetail.jsx'
 import CompanyJobs from './pages/CompanyJobs.jsx'
 import CompanyCandidates from './pages/CompanyCandidates.jsx'
+import AdminAnnouncements from './pages/AdminAnnouncements.jsx'
+import Announcements from './pages/Announcements.jsx' 
 
 function App() {
   return (
@@ -81,7 +83,7 @@ function App() {
           </PrivateRoute>
         }
       />
-      
+
       <Route
         path="/admin/companies"
         element={
@@ -115,7 +117,30 @@ function App() {
           </PrivateRoute>
         }
 />
-       
+       <Route
+          path="/admin/announcements"
+          element={
+            <PrivateRoute allowedRole="admin">
+              <AdminAnnouncements />
+            </PrivateRoute>
+  }
+/>
+      <Route
+        path="/student/announcements"
+        element={
+          <PrivateRoute allowedRole="student">
+            <Announcements role="student" endpoint="/api/students/me/announcements" />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/company/announcements"
+        element={
+          <PrivateRoute allowedRole="company">
+            <Announcements role="company" endpoint="/api/companies/announcements" />
+          </PrivateRoute>
+        }
+      />
     </Routes>
   )
 }

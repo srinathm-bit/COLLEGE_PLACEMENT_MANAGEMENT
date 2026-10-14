@@ -9,14 +9,17 @@ const NAV_ITEMS = {
     { label: 'Companies', path: '/admin/companies', icon: '🏢' },
     { label: 'Departments', path: '/admin/departments', icon: '📚' },
     { label: 'Placement Overview', path: '/admin/applications', icon: '📋' },
+    { label: 'Announcements', path: '/admin/announcements', icon: '📢' },
   ],
   student: [
     { label: 'Dashboard', path: '/student-dashboard', icon: '🏠' },
+    { label: 'Announcements', path: '/student/announcements', icon: '📢' },
   ],
   company: [
     { label: 'Dashboard', path: '/company-dashboard', icon: '🏠' },
     { label: 'Jobs', path: '/company/jobs', icon: '💼' },
     { label: 'Candidates', path: '/company/candidates', icon: '👥' },
+    { label: 'Announcements', path: '/company/announcements', icon: '📢' },
   ],
 }
 
