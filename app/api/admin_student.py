@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from app.core.file_storage import resume_response
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -85,13 +85,7 @@ def update_student_detail(
 @router.get("/{student_id}/resume")
 def get_student_resume(student_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):
     student = _get_student_or_404(db, student_id)
-    if not student.resume_path or not Path(student.resume_path).exists():
-        raise HTTPException(status_code=404, detail="No resume uploaded for this student")
-    return FileResponse(
-        path=student.resume_path,
-        filename=student.resume_filename,
-        media_type="application/octet-stream",
-    )
+    return resume_response(student.resume_path, student.resume_filename)
 
 @router.delete("/{student_id}", status_code=204)
 def delete_student_detail(student_id: int, db: Session = Depends(get_db), _admin=Depends(require_admin)):

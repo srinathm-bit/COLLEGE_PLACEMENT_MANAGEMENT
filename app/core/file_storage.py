@@ -1,11 +1,40 @@
+import logging
 import re
+import uuid
+from functools import lru_cache
 from pathlib import Path
 
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import HTTPException, UploadFile, status
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import StreamingResponse
 
-UPLOAD_ROOT = Path("uploads/resumes")
+from app.core.config import settings
+
+logger = logging.getLogger("uvicorn.error")
+
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
 MAX_RESUME_BYTES = 5 * 1024 * 1024  # 5 MB
+KEY_PREFIX = "resumes/"
+
+CONTENT_TYPES = {
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+
+
+@lru_cache
+def _s3_client():
+    if not (settings.S3_BUCKET_NAME and settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY):
+        raise HTTPException(status_code=500, detail="File storage is not configured")
+    return boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_REGION,
+    )
 
 
 def _safe_filename(original_name: str) -> str:
@@ -16,8 +45,8 @@ def _safe_filename(original_name: str) -> str:
 
 async def save_resume_file(student_id: int, upload: UploadFile) -> tuple[str, str]:
     """
-    Validates and saves an uploaded resume to disk.
-    Returns (stored_filename, absolute_path_as_string).
+    Validates a resume and uploads it to S3.
+    Returns (safe_filename, s3_key).
     """
     ext = Path(upload.filename or "").suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
@@ -33,11 +62,55 @@ async def save_resume_file(student_id: int, upload: UploadFile) -> tuple[str, st
             detail="Resume file too large (max 5 MB)",
         )
 
-    student_dir = UPLOAD_ROOT / str(student_id)
-    student_dir.mkdir(parents=True, exist_ok=True)
-
     safe_name = _safe_filename(upload.filename or f"resume{ext}")
-    dest_path = student_dir / safe_name
+    key = f"{KEY_PREFIX}{student_id}/{uuid.uuid4().hex}_{safe_name}"
 
-    dest_path.write_bytes(contents)
-    return safe_name, str(dest_path)
+    client = _s3_client()
+    try:
+        await run_in_threadpool(
+            lambda: client.put_object(
+                Bucket=settings.S3_BUCKET_NAME,
+                Key=key,
+                Body=contents,
+                ContentType=CONTENT_TYPES[ext],
+            )
+        )
+    except (BotoCoreError, ClientError) as exc:
+        logger.error(f"S3 upload failed: {exc}")
+        raise HTTPException(status_code=502, detail="Could not upload the resume. Please try again.")
+
+    return safe_name, key
+
+
+def delete_resume_file(key: str | None) -> None:
+    """Best effort: never raises, so a storage problem can't break a profile update or delete."""
+    if not key or not key.startswith(KEY_PREFIX):
+        return  # nothing stored, or an old local-disk path
+    try:
+        _s3_client().delete_object(Bucket=settings.S3_BUCKET_NAME, Key=key)
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"S3 delete failed for {key}: {exc}")
+
+
+def resume_response(key: str | None, filename: str | None) -> StreamingResponse:
+    """Streams a resume from the private bucket to the client."""
+    if not key or not key.startswith(KEY_PREFIX):
+        raise HTTPException(status_code=404, detail="No resume uploaded yet")
+
+    try:
+        obj = _s3_client().get_object(Bucket=settings.S3_BUCKET_NAME, Key=key)
+    except ClientError as exc:
+        logger.error(f"S3 download failed for {key}: {exc}")
+        if exc.response.get("Error", {}).get("Code") in ("NoSuchKey", "404"):
+            raise HTTPException(status_code=404, detail="Resume file not found. Please upload it again.")
+        raise HTTPException(status_code=502, detail="Could not fetch the resume. Please try again.")
+    except BotoCoreError as exc:
+        logger.error(f"S3 download failed for {key}: {exc}")
+        raise HTTPException(status_code=502, detail="Could not fetch the resume. Please try again.")
+
+    ext = Path(key).suffix.lower()
+    return StreamingResponse(
+        obj["Body"].iter_chunks(chunk_size=64 * 1024),
+        media_type=CONTENT_TYPES.get(ext, "application/octet-stream"),
+        headers={"Content-Disposition": f'attachment; filename="{filename or Path(key).name}"'},
+    )

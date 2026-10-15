@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
-
+from app.core.file_storage import delete_resume_file
 from app.core.security import hash_password
 from app.models.enums import UserRole
 from app.models.student import Student
@@ -85,8 +85,10 @@ def set_resume(db: Session, student: Student, filename: str, path: str) -> Stude
 
 def delete_student(db: Session, student: Student) -> None:
     user = db.query(User).filter(User.id == student.user_id).first()
+    resume_key = student.resume_path
     db.delete(student)
     db.flush()
     if user:
         db.delete(user)
     db.commit()
+    delete_resume_file(resume_key)

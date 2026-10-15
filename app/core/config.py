@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    AWS_REGION: str = "ap-southeast-2"
+    S3_BUCKET_NAME: str = ""
+
     ENV: str = "development"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

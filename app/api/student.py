@@ -6,7 +6,9 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.schemas.application import MyApplicationOut
 from app.core.deps import require_role
-from app.core.file_storage import save_resume_file
+from fastapi.concurrency import run_in_threadpool
+
+from app.core.file_storage import delete_resume_file, resume_response, save_resume_file
 from app.crud.student import get_student_by_user_id, set_resume, update_student_self
 from app.db.session import get_db
 from app.models.enums import UserRole
@@ -77,21 +79,17 @@ async def upload_my_resume(
     current_user: User = Depends(require_student),
 ):
     student = _get_own_student_or_404(db, current_user)
-    filename, path = await save_resume_file(student.id, file)
-    student = set_resume(db, student, filename, path)
+    old_key = student.resume_path
+    filename, key = await save_resume_file(student.id, file)
+    student = set_resume(db, student, filename, key)
+    await run_in_threadpool(delete_resume_file, old_key)  # remove the previous resume
     return ResumeOut(filename=student.resume_filename, uploaded_at=student.resume_uploaded_at)
 
 
 @router.get("/me/resume")
 def get_my_resume(db: Session = Depends(get_db), current_user: User = Depends(require_student)):
     student = _get_own_student_or_404(db, current_user)
-    if not student.resume_path or not Path(student.resume_path).exists():
-        raise HTTPException(status_code=404, detail="No resume uploaded yet")
-    return FileResponse(
-        path=student.resume_path,
-        filename=student.resume_filename,
-        media_type="application/octet-stream",
-    )
+    return resume_response(student.resume_path, student.resume_filename)
 
 
 
