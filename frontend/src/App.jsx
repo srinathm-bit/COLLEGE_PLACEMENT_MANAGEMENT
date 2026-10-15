@@ -14,6 +14,7 @@ import CompanyJobs from './pages/CompanyJobs.jsx'
 import CompanyCandidates from './pages/CompanyCandidates.jsx'
 import AdminAnnouncements from './pages/AdminAnnouncements.jsx'
 import Announcements from './pages/Announcements.jsx' 
+import StudentJobs from './pages/StudentJobs.jsx' 
 
 function App() {
   return (
@@ -141,6 +142,15 @@ function App() {
           </PrivateRoute>
         }
       />
+       <Route
+          path="/student/jobs"
+          element={
+            <PrivateRoute allowedRole="student">
+              <StudentJobs />
+            </PrivateRoute>
+          }
+/>
+      
     </Routes>
   )
 }

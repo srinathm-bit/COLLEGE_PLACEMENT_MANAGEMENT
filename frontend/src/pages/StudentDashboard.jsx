@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/axios.js'
 import Nav from '../components/Nav.jsx'
 import './StudentDashboard.css'
 
-const STAGES = ['applied', 'shortlisted', 'interview_scheduled', 'selected']
-const STAGE_LABELS = { applied: 'Applied', shortlisted: 'Shortlisted', interview_scheduled: 'Interview', selected: 'Selected' }
+function skillList(skills) {
+  if (!skills) return []
+  return Array.isArray(skills) ? skills : String(skills).split(',').map((s) => s.trim()).filter(Boolean)
+}
 
 function StudentDashboard() {
   const [profile, setProfile] = useState(null)
-  const [jobs, setJobs] = useState([])
   const [loadingProfile, setLoadingProfile] = useState(true)
-  const [loadingJobs, setLoadingJobs] = useState(true)
   const [error, setError] = useState('')
+
+  const [eligibleCount, setEligibleCount] = useState(0)
+  const [applications, setApplications] = useState([])
+  const [interviews, setInterviews] = useState([])
 
   const [resumeFile, setResumeFile] = useState(null)
   const [uploading, setUploading] = useState(false)
@@ -22,17 +27,11 @@ function StudentDashboard() {
   const [editError, setEditError] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
 
-  const [myApplications, setMyApplications] = useState([])
-  const [applyingJobId, setApplyingJobId] = useState(null)
-
-  const [myInterviews, setMyInterviews] = useState([])
-  const [loadingInterviews, setLoadingInterviews] = useState(true)
-
   useEffect(() => {
     fetchProfile()
-    fetchEligibleJobs()
-    fetchMyApplications()
-    fetchMyInterviews()
+    api.get('/api/students/me/jobs/eligible').then((res) => setEligibleCount(res.data.length)).catch(() => setEligibleCount(0))
+    api.get('/api/students/me/applications').then((res) => setApplications(res.data)).catch(() => setApplications([]))
+    api.get('/api/students/me/interviews').then((res) => setInterviews(res.data)).catch(() => setInterviews([]))
   }, [])
 
   function fetchProfile() {
@@ -43,45 +42,6 @@ function StudentDashboard() {
       .finally(() => setLoadingProfile(false))
   }
 
-  function fetchEligibleJobs() {
-    setLoadingJobs(true)
-    api.get('/api/students/me/jobs/eligible')
-      .then((res) => setJobs(res.data))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoadingJobs(false))
-  }
-
-  function fetchMyApplications() {
-    api.get('/api/students/me/applications')
-      .then((res) => setMyApplications(res.data))
-      .catch(() => setMyApplications([]))
-  }
-
-  function fetchMyInterviews() {
-    setLoadingInterviews(true)
-    api.get('/api/students/me/interviews')
-      .then((res) => setMyInterviews(res.data))
-      .catch(() => setMyInterviews([]))
-      .finally(() => setLoadingInterviews(false))
-  }
-
-  async function handleApply(jobId) {
-    setApplyingJobId(jobId)
-    setError('')
-    try {
-      await api.post(`/api/students/me/jobs/${jobId}/apply`)
-      fetchMyApplications()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setApplyingJobId(null)
-    }
-  }
-
-  function hasApplied(jobId) {
-    return myApplications.some((app) => app.job_id === jobId)
-  }
-
   function startEdit() {
     setEditData({
       full_name: profile.full_name,
@@ -89,7 +49,7 @@ function StudentDashboard() {
       cgpa: profile.cgpa,
       active_backlogs: profile.active_backlogs,
       phone: profile.phone || '',
-      skills: profile.skills || '',
+      skills: skillList(profile.skills).join(', '),
     })
     setEditError('')
     setEditMode(true)
@@ -103,13 +63,13 @@ function StudentDashboard() {
     e.preventDefault()
     setEditError('')
     setSavingEdit(true)
-
     try {
       await api.put('/api/students/me', {
         ...editData,
         graduation_year: parseInt(editData.graduation_year) || 0,
         cgpa: parseFloat(editData.cgpa) || 0,
         active_backlogs: parseInt(editData.active_backlogs) || 0,
+        skills: editData.skills ? editData.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
       })
       setEditMode(false)
       fetchProfile()
@@ -123,7 +83,6 @@ function StudentDashboard() {
   async function handleResumeUpload(e) {
     e.preventDefault()
     if (!resumeFile) return
-
     setUploadError('')
     setUploading(true)
 
@@ -143,207 +102,128 @@ function StudentDashboard() {
     }
   }
 
-  function skillTags(skills) {
-    if (!skills) return <span className="muted-text">—</span>
-    const list = Array.isArray(skills) ? skills : skills.split(',').map((s) => s.trim())
-    return list.map((s, i) => <span key={i} className="tag tag-accent">{s}</span>)
-  }
+  const shortlisted = applications.filter((a) => a.status === 'shortlisted' || a.status === 'interview_scheduled').length
+  const selected = applications.filter((a) => a.status === 'selected').length
+  const upcoming = interviews.filter((i) => i.result === 'pending').length
+
+  const kpis = [
+    { label: 'Eligible Jobs', value: eligibleCount, tone: 'blue', to: '/student/jobs?tab=eligible' },
+    { label: 'Applied', value: applications.length, tone: 'plain', to: '/student/jobs?tab=applications' },
+    { label: 'Shortlisted', value: shortlisted, tone: 'amber', to: '/student/jobs?tab=applications' },
+    { label: 'Upcoming Interviews', value: upcoming, tone: 'teal', to: '/student/jobs?tab=interviews' },
+    { label: 'Selected', value: selected, tone: 'green', to: '/student/jobs?tab=applications' },
+  ]
 
   return (
-    <div className="app-layout">
+    <div className="sd-shell">
       <Nav role="student" title="Student" />
-      <main className="main-content">
-        <div className="page-header-row">
-          <div>
-            <h1>Welcome back, {profile?.full_name?.split(' ')[0] || ''}</h1>
-            <p className="page-subtitle">
-              {jobs.length} job{jobs.length !== 1 ? 's' : ''} match your profile right now.
-            </p>
-          </div>
+      <main className="sd-main">
+        <div className="sd-header">
+          <h1>Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}</h1>
+          <p className="sd-subtitle">Your placement progress at a glance.</p>
         </div>
 
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="sd-error">{error}</p>}
 
-        <div className="dashboard-grid">
-          <div className="side-panel">
-            <div className="panel-card">
-              <h3>My Profile</h3>
-              {loadingProfile ? (
-                <p className="muted-text">Loading...</p>
-              ) : profile && !editMode ? (
-                <div className="profile-list">
-                  <div className="profile-row"><span className="profile-label">Name</span><span>{profile.full_name}</span></div>
-                  <div className="profile-row"><span className="profile-label">Roll No.</span><span>{profile.roll_number}</span></div>
-                  <div className="profile-row"><span className="profile-label">Year</span><span>{profile.year_label || '—'}</span></div>
-                  <div className="profile-row"><span className="profile-label">CGPA</span><span>{profile.cgpa}</span></div>
-                  <div className="profile-row"><span className="profile-label">Backlogs</span><span>{profile.active_backlogs}</span></div>
-                  <div className="profile-row"><span className="profile-label">Phone</span><span>{profile.phone || '—'}</span></div>
-                  <div className="profile-row-skills">
-                    <span className="profile-label">Skills</span>
-                    <div>{skillTags(profile.skills)}</div>
-                  </div>
+        <div className="sd-kpi-grid">
+          {kpis.map((k) => (
+            <Link key={k.label} to={k.to} className={`sd-kpi sd-tone-${k.tone}`}>
+              <span className="sd-kpi-value">{k.value}</span>
+              <span className="sd-kpi-label">{k.label}</span>
+            </Link>
+          ))}
+        </div>
 
-                  <button className="btn-outline" onClick={startEdit}>Edit Profile</button>
-
-                  <div className="resume-section">
-                    <span className="profile-label">Resume</span>
-                    {profile.resume_filename ? (
-                      <p className="resume-current">📄 {profile.resume_filename}</p>
-                    ) : (
-                      <p className="muted-text">No resume uploaded yet</p>
-                    )}
-                    <form onSubmit={handleResumeUpload} className="resume-form">
-                      <input type="file" onChange={(e) => setResumeFile(e.target.files[0])} accept=".pdf,.doc,.docx" />
-                      <button type="submit" className="btn-primary btn-sm" disabled={!resumeFile || uploading}>
-                        {uploading ? 'Uploading...' : 'Upload'}
-                      </button>
-                    </form>
-                    {uploadError && <p className="error-message">{uploadError}</p>}
-                  </div>
+        <div className="sd-profile">
+          {loadingProfile ? (
+            <p className="sd-muted">Loading...</p>
+          ) : profile && !editMode ? (
+            <>
+              <div className="sd-profile-top">
+                <div className="sd-avatar">{profile.full_name?.charAt(0)}</div>
+                <div className="sd-profile-id">
+                  <p className="sd-profile-name">{profile.full_name}</p>
+                  <p className="sd-muted">
+                    {profile.roll_number}
+                    {profile.year_label ? ` · ${profile.year_label}` : ''}
+                  </p>
                 </div>
-              ) : profile && editMode ? (
-                <form className="edit-form" onSubmit={handleSaveEdit}>
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <input name="full_name" value={editData.full_name} onChange={handleEditChange} />
-                  </div>
-                  <div className="form-group">
-                    <label>Graduation Year</label>
-                    <input type="number" name="graduation_year" value={editData.graduation_year} onChange={handleEditChange} />
-                  </div>
-                  <div className="form-group">
-                    <label>CGPA</label>
-                    <input type="number" step="0.01" name="cgpa" value={editData.cgpa} onChange={handleEditChange} />
-                  </div>
-                  <div className="form-group">
-                    <label>Active Backlogs</label>
-                    <input type="number" name="active_backlogs" value={editData.active_backlogs} onChange={handleEditChange} />
-                  </div>
-                  <div className="form-group">
-                    <label>Phone</label>
-                    <input name="phone" value={editData.phone} onChange={handleEditChange} />
-                  </div>
-                  <div className="form-group">
-                    <label>Skills</label>
-                    <input name="skills" value={editData.skills} onChange={handleEditChange} placeholder="e.g. python, sql" />
-                  </div>
-                  {editError && <p className="error-message">{editError}</p>}
-                  <div className="edit-actions">
-                    <button type="submit" className="btn-success" disabled={savingEdit}>{savingEdit ? 'Saving...' : 'Save'}</button>
-                    <button type="button" className="btn-ghost" onClick={() => setEditMode(false)}>Cancel</button>
-                  </div>
+                <button className="sd-btn-outline" onClick={startEdit}>Edit Profile</button>
+              </div>
+
+              <div className="sd-info-grid">
+                <div className="sd-info-item"><span className="sd-info-label">Email</span><span>{profile.email}</span></div>
+                <div className="sd-info-item"><span className="sd-info-label">Phone</span><span>{profile.phone || '—'}</span></div>
+                <div className="sd-info-item"><span className="sd-info-label">CGPA</span><span>{profile.cgpa}</span></div>
+                <div className="sd-info-item"><span className="sd-info-label">Active Backlogs</span><span>{profile.active_backlogs}</span></div>
+                <div className="sd-info-item"><span className="sd-info-label">Graduation Year</span><span>{profile.graduation_year}</span></div>
+                <div className="sd-info-item"><span className="sd-info-label">Current Year</span><span>{profile.year_label || '—'}</span></div>
+              </div>
+
+              <div className="sd-block">
+                <span className="sd-info-label">Skills</span>
+                <div className="sd-tags">
+                  {skillList(profile.skills).length === 0 ? (
+                    <span className="sd-muted">No skills added yet</span>
+                  ) : (
+                    skillList(profile.skills).map((s, i) => <span key={i} className="sd-tag">{s}</span>)
+                  )}
+                </div>
+              </div>
+
+              <div className="sd-block">
+                <span className="sd-info-label">Resume</span>
+                {profile.resume_filename ? (
+                  <p className="sd-resume-current">📄 {profile.resume_filename}</p>
+                ) : (
+                  <p className="sd-muted">No resume uploaded yet</p>
+                )}
+                <form onSubmit={handleResumeUpload} className="sd-resume-form">
+                  <input type="file" onChange={(e) => setResumeFile(e.target.files[0])} accept=".pdf,.doc,.docx" />
+                  <button type="submit" className="sd-btn-primary" disabled={!resumeFile || uploading}>
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </button>
                 </form>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="main-panel">
-            <div className="panel-card">
-              <h3>Jobs You're Eligible For</h3>
-              {loadingJobs ? (
-                <p className="muted-text">Loading...</p>
-              ) : jobs.length === 0 ? (
-                <div className="empty-state">No eligible jobs right now — check back later.</div>
-              ) : (
-                <div className="job-list">
-                  {jobs.map((job) => (
-                    <div key={job.id} className="job-item">
-                      <div className="job-item-top">
-                        <div>
-                          <h4>{job.title}</h4>
-                          <p className="job-company">{job.company_name}</p>
-                        </div>
-                        <div className="job-badges">
-                          <span className="badge badge-blue">CGPA ≥ {job.min_cgpa}</span>
-                          {job.min_year && <span className="badge badge-teal">Year ≥ {job.min_year}</span>}
-                      </div>
-                      </div>
-                      {job.description && <p className="job-desc">{job.description}</p>}
-                      {job.required_skills && <div className="job-tags">{skillTags(job.required_skills)}</div>}
-                      <div className="job-item-footer">
-                        {hasApplied(job.id) ? (
-                          <span className="badge badge-green">✓ Applied</span>
-                        ) : (
-                          <button
-                            className="btn-primary btn-sm"
-                            onClick={() => handleApply(job.id)}
-                            disabled={applyingJobId === job.id}
-                          >
-                            {applyingJobId === job.id ? 'Applying...' : 'Apply'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                {uploadError && <p className="sd-error">{uploadError}</p>}
+              </div>
+            </>
+          ) : profile && editMode ? (
+            <form className="sd-edit-form" onSubmit={handleSaveEdit}>
+              <div className="sd-edit-grid">
+                <div className="sd-group">
+                  <label>Full Name</label>
+                  <input name="full_name" value={editData.full_name} onChange={handleEditChange} />
                 </div>
-              )}
-            </div>
-
-            <div className="panel-card">
-              <h3>My Applications</h3>
-              {myApplications.length === 0 ? (
-                <div className="empty-state">No applications yet. Apply from the eligible jobs above.</div>
-              ) : (
-                <div className="app-list">
-                  {myApplications.map((app) => {
-                    const stageIndex = STAGES.indexOf(app.status)
-                    return (
-                      <div key={app.application_id} className="app-item">
-                        <div className="app-item-top">
-                          <div>
-                            <h4>{app.job_title}</h4>
-                            <p className="job-company">{app.company_name}</p>
-                          </div>
-                          <span className={`badge ${app.status === 'rejected' ? 'badge-red' : app.status === 'selected' ? 'badge-green' : 'badge-amber'}`}>
-                            {app.status.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <div className="stepper">
-                          {STAGES.map((s, i) => (
-                            <div
-                              key={s}
-                              className={`step ${app.status === 'rejected' ? (i === 0 ? 'on' : 'bad') : i <= stageIndex ? 'on' : ''}`}
-                            >
-                              {STAGE_LABELS[s]}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
+                <div className="sd-group">
+                  <label>Phone</label>
+                  <input name="phone" value={editData.phone} onChange={handleEditChange} />
                 </div>
-              )}
-            </div>
-
-            <div className="panel-card">
-              <h3>Upcoming Interviews</h3>
-              {loadingInterviews ? (
-                <p className="muted-text">Loading...</p>
-              ) : myInterviews.length === 0 ? (
-                <div className="empty-state">No interviews scheduled yet.</div>
-              ) : (
-                <div className="app-list">
-                  {myInterviews.map((iv) => (
-                    <div key={iv.id} className="app-item">
-                      <div className="app-item-top">
-                        <div>
-                          <h4>{iv.job_title}</h4>
-                          <p className="job-company">{iv.company_name}</p>
-                        </div>
-                        <span className="badge badge-teal">{iv.mode}</span>
-                      </div>
-                      <p className="interview-when">🗓 {new Date(iv.scheduled_at).toLocaleString()}</p>
-                      {iv.location_or_link && <p className="muted-text">{iv.location_or_link}</p>}
-                      {iv.notes && <p className="interview-notes">{iv.notes}</p>}
-                      {iv.result !== 'pending' && (
-                        <span className={`badge ${iv.result === 'passed' ? 'badge-green' : 'badge-red'}`}>{iv.result}</span>
-                      )}
-                    </div>
-                  ))}
+                <div className="sd-group">
+                  <label>CGPA</label>
+                  <input type="number" step="0.01" name="cgpa" value={editData.cgpa} onChange={handleEditChange} />
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="sd-group">
+                  <label>Active Backlogs</label>
+                  <input type="number" name="active_backlogs" value={editData.active_backlogs} onChange={handleEditChange} />
+                </div>
+                <div className="sd-group">
+                  <label>Graduation Year</label>
+                  <input type="number" name="graduation_year" value={editData.graduation_year} onChange={handleEditChange} />
+                </div>
+                <div className="sd-group">
+                  <label>Skills (comma separated)</label>
+                  <input name="skills" value={editData.skills} onChange={handleEditChange} placeholder="e.g. python, sql" />
+                </div>
+              </div>
+              {editError && <p className="sd-error">{editError}</p>}
+              <div className="sd-edit-actions">
+                <button type="submit" className="sd-btn-success" disabled={savingEdit}>
+                  {savingEdit ? 'Saving...' : 'Save'}
+                </button>
+                <button type="button" className="sd-btn-ghost" onClick={() => setEditMode(false)}>Cancel</button>
+              </div>
+            </form>
+          ) : null}
         </div>
       </main>
     </div>

@@ -13,6 +13,7 @@ const NAV_ITEMS = {
   ],
   student: [
     { label: 'Dashboard', path: '/student-dashboard', icon: '🏠' },
+    { label: 'Jobs', path: '/student/jobs', icon: '💼' },
     { label: 'Announcements', path: '/student/announcements', icon: '📢' },
   ],
   company: [
